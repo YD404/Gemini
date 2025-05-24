@@ -25,7 +25,7 @@
         .signage-container {
             width: 100%;
             height: 100%;
-            background-color: #11111111; /* 電子ペーパーの背景に近い暗い色 */
+            background-color: #222222; /* 電子ペーパーの背景に近い暗い色 */
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -39,8 +39,8 @@
         /* 16:9 アスペクト比を維持するラッパー */
         .aspect-ratio-wrapper {
             width: 95vw; /* ビューポート幅の95% */
-            max-width: calc(95vh * 16 / 9); /* 高さを基準にした最大幅 */
-            height: calc(95vw * 9 / 16); /* 幅を基準にした高さ */
+            max-width: calc(95vh * 16 / 9); /* 高さを基準にした最大幅 (16:9) */
+            height: calc(95vw * 9 / 16); /* 幅を基準にした高さ (16:9) */
             max-height: 95vh; /* ビューポート高さの95% */
             position: relative;
         }
@@ -48,50 +48,53 @@
 
         .content-grid {
             display: grid;
-            grid-template-rows: auto 1fr; /* 上段はコンテンツに合わせ、下段は残りのスペースを占有 */
+            grid-template-rows: auto 1fr; /* 上段(時刻)はコンテンツに合わせ、下段(天気)は残りのスペースを占有 */
             width: 100%;
             height: 100%;
-            padding: 3vmin; /* 可変パディング */
-            gap: 3vmin; /* 可変ギャップ */
+            padding: 3vmin; /* 全体のパディングを少し調整 */
+            gap: 3vmin; /* 全体のギャップを少し調整 */
             box-sizing: border-box;
         }
 
         .time-section, .weather-section {
-            background-color: #11111111; /* やや明るいグレーのパネル背景 */
+            background-color: #333333; /* やや明るいグレーのパネル背景 */
             border: 2px solid #666666; /* 中間グレーのボーダー */
-            padding: 2vmin; /* パディングを少し調整 */
+            border-radius: 8px;
+            padding: 2vmin;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            color: #dddddd; /* 非常に明るいグレーの文字色 */
+            color: #dddddd;
         }
 
         .time-section {
             grid-row: 1 / 2;
-            padding: 3vmin; /* 時刻セクションのパディングは維持 */
+            padding: 3vmin; /* 時刻セクションのパディング */
         }
 
         .weather-section {
             grid-row: 2 / 3;
             display: grid;
-            grid-template-columns: 0.8fr 1.2fr; /* アイコン側を少し狭く、詳細側を少し広く */
-            align-items: center; /* 垂直方向中央揃え */
-            gap: 2vmin;
+            /* grid-template-columns: 0.8fr 1.2fr; アイコン側を少し狭く、詳細側を少し広く */
+            /* 横表示ではアイコンと詳細を左右に均等に近づけるか、アイコンを少し小さめにする */
+            grid-template-columns: 0.7fr 1.3fr; /* アイコンを少し小さめに、詳細を広めに */
+            align-items: center;
+            gap: 2vmin; /* アイコンと詳細の間のギャップ */
         }
 
         #time {
-            font-family: 'Roboto Mono', monospace; /* デジタル風フォント */
-            font-size: 15vmin; /* 可変フォントサイズ */
+            font-family: 'Roboto Mono', monospace;
+            font-size: 15vmin; /* 横長画面に合わせて調整 */
             font-weight: 700;
             line-height: 1;
-            color: #eeeeee; /* 最も明るいグレー */
+            color: #eeeeee;
         }
 
         #date {
-            font-size: 5vmin; /* 可変フォントサイズ */
+            font-size: 5vmin; /* 横長画面に合わせて調整 */
             margin-top: 1vmin;
             color: #cccccc;
         }
@@ -100,63 +103,67 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100%; /* コンテナの高さを最大に */
+            height: 100%;
         }
 
-        #weather-icon { /* This is a div containing the span for the icon */
-            width: auto; /* 幅は親に合わせる */
-            height: auto; /* 高さは親に合わせる */
-            max-width: 25vmin; /* 最大幅を設定 */
-            max-height: 25vmin; /* 最大高さを設定 */
-            border-radius: 2px; /* 角丸を少し大きく */
-            padding: 20.0vmin; /* パディングを少し調整 */
+        #weather-icon {
+            width: auto;
+            height: auto;
+            max-width: 25vmin; /* アイコンコンテナの最大サイズ (横表示用) */
+            max-height: 25vmin;
+            // background-color: #dddddd; /* アイコン背景 */
+            border-radius: 8px;
+            padding: 1.5vmin; /* アイコンと背景の間のパディング */
             display: flex;
             justify-content: center;
             align-items: center;
-            aspect-ratio: 1 / 1; /* 正方形を維持 */
+            aspect-ratio: 1 / 1;
             margin:0 -100px 0  0;
         }
-        #weather-icon .material-symbols-outlined { /* Style for the icon itself */
-            font-size: 40vmin; /* アイコンサイズを大幅に大きく */
-            color: #ffffffff;
+        #weather-icon .material-symbols-outlined {
+            font-size: 28vmin; /* アイコン自体のサイズ (横表示用) */
+            color: #ffffffff; /* アイコンの色 (背景が明るいため暗く) */
             font-variation-settings:
                 'FILL' 0,
-                'wght' 300, /* 少し細めに調整 */
+                'wght' 300,
                 'GRAD' 0,
                 'opsz' 48;
         }
 
 
         .weather-details {
-            font-size: 3.8vmin; /* 説明文が長くなるため少し調整 */
+            font-size: 3.8vmin; /* 天気詳細の基準フォントサイズ */
             display: flex;
             flex-direction: column;
-            justify-content: center; /* 上下中央揃え */
-            align-items: center; /* 左右中央揃え */
-            gap: 0.5vmin; /* 要素間のギャップを少し詰める */
-            height: 100%; /* コンテナの高さを最大に */
+            justify-content: center;
+            align-items: center; /* 詳細部分は中央揃え */
+            gap: 0.5vmin;
+            height: 100%;
             text-align: center;
+            width: 100%;
         }
 
         #temperature {
-            font-size: 20vmin; /* 温度のフォントサイズを少し調整（説明文とのバランス） */
+            font-size: 16vmin; /* 温度表示のサイズ (横表示用) */
             font-weight: 700;
             color: #eeeeee;
-            line-height: 1.1; /* 行間を少し詰める */
+            line-height: 1.1;
         }
         #weather-description {
-            font-size: 3.8vmin; /* 説明のフォントサイズ */
+            font-size: 3.8vmin; /* 天気説明のサイズ */
             color: #cccccc;
-            line-height: 1.3; /* 説明文が複数行になる可能性を考慮 */
+            line-height: 1.3;
+            padding: 0 1vmin;
         }
         #city-name {
-            font-size: 3.3vmin; /* 都市名のフォントサイズを少し小さく */
+            font-size: 3.3vmin; /* 都市名のサイズ */
             color: #bbbbbb;
+            margin-top: 0.5vmin;
         }
 
         /* ローディング・エラーメッセージ */
         .message {
-            font-size: 4vmin;
+            font-size: 3.5vmin; /* メッセージのフォントサイズ調整 */
             color: #bbbbbb;
         }
 
@@ -173,7 +180,8 @@
                 <div class="weather-section">
                     <div class="weather-icon-container">
                         <div id="weather-icon">
-                            <span class="material-symbols-outlined">help</span> </div>
+                            <span class="material-symbols-outlined">help</span>
+                        </div>
                     </div>
                     <div class="weather-details">
                         <div id="temperature" class="font-roboto-mono">--°C</div>
@@ -257,38 +265,42 @@
             let dayLabel = "";
             let tempString = "--°C";
             let descriptionText = "情報なし";
+            let iconName = "help";
 
             if (isDisplayingToday && todayWeatherData) {
                 displayData = todayWeatherData;
                 dayLabel = "今日";
                 tempString = `${displayData.temperature}°C`; // 現在の気温
                 const weatherInfo = getWeatherInfoFromWMOCode(displayData.weathercode);
+                iconName = weatherInfo.icon;
                 descriptionText = `${dayLabel}: ${weatherInfo.description}`;
                 if (displayData.max_temp !== null && displayData.min_temp !== null) {
                     descriptionText += ` (最高 ${displayData.max_temp}°C / 最低 ${displayData.min_temp}°C)`;
                 }
-                weatherIconElement.innerHTML = `<span class="material-symbols-outlined">${weatherInfo.icon}</span>`;
+
 
             } else if (!isDisplayingToday && tomorrowWeatherData) {
                 displayData = tomorrowWeatherData;
                 dayLabel = "明日";
                 tempString = displayData.max_temp !== null ? `${displayData.max_temp}°C` : '--°C'; // 明日は最高気温をメイン表示
                 const weatherInfo = getWeatherInfoFromWMOCode(displayData.weathercode);
+                iconName = weatherInfo.icon;
                 descriptionText = `${dayLabel}: ${weatherInfo.description}`;
                 if (displayData.max_temp !== null && displayData.min_temp !== null) {
                     descriptionText += ` (最高 ${displayData.max_temp}°C / 最低 ${displayData.min_temp}°C)`;
                 }
-                weatherIconElement.innerHTML = `<span class="material-symbols-outlined">${weatherInfo.icon}</span>`;
 
             } else {
                 // データがない場合
-                weatherIconElement.innerHTML = `<span class="material-symbols-outlined">help</span>`;
+                descriptionText = "読込中..."; // 初期メッセージ
                 weatherDescriptionElement.classList.add('message');
             }
 
+            weatherIconElement.innerHTML = `<span class="material-symbols-outlined">${iconName}</span>`;
             temperatureElement.textContent = tempString;
             weatherDescriptionElement.textContent = descriptionText;
-            if (descriptionText !== "情報なし" && !descriptionText.startsWith("APIエラー") && !descriptionText.startsWith("天気情報取得エラー") && !descriptionText.startsWith("天気データ形式エラー")) {
+
+            if (descriptionText !== "情報なし" && descriptionText !== "読込中..." && !descriptionText.startsWith("APIエラー") && !descriptionText.startsWith("天気情報取得エラー") && !descriptionText.startsWith("天気データ形式エラー")) {
                  weatherDescriptionElement.classList.remove('message');
             } else {
                  weatherDescriptionElement.classList.add('message');
@@ -329,39 +341,47 @@
                         max_temp: data.daily.temperature_2m_max[1] !== null ? Math.round(data.daily.temperature_2m_max[1]) : null,
                         min_temp: data.daily.temperature_2m_min[1] !== null ? Math.round(data.daily.temperature_2m_min[1]) : null,
                     };
-                    
+
                     // 初回表示更新
-                    updateWeatherDisplay();
+                    if (!displayToggleIntervalId) { // タイマーがまだ開始されていなければ
+                        updateWeatherDisplay(); // 先に一度表示を更新
+                        displayToggleIntervalId = setInterval(() => {
+                            isDisplayingToday = !isDisplayingToday;
+                            updateWeatherDisplay();
+                        }, 10000); // 10秒ごとに切り替え
+                    } else {
+                        // タイマーが既に動いている場合は、現在の表示を更新するだけで良い
+                        updateWeatherDisplay();
+                    }
                     weatherDescriptionElement.classList.remove('message');
 
 
-                    // 表示切り替えタイマーを開始 (既に存在する場合はクリアして再設定)
-                    if (displayToggleIntervalId) clearInterval(displayToggleIntervalId);
-                    displayToggleIntervalId = setInterval(() => {
-                        isDisplayingToday = !isDisplayingToday;
-                        updateWeatherDisplay();
-                    }, 10000); // 10秒ごとに切り替え
-
                 } else {
                     console.warn('APIは200 OKを返しましたが、期待する天気データ形式ではありませんでした。レスポンス:', JSON.stringify(data, null, 2));
-                    todayWeatherData = null; // データ不備の場合はクリア
+                    todayWeatherData = null;
                     tomorrowWeatherData = null;
                     weatherDescriptionElement.textContent = '天気データ形式エラー';
                     weatherDescriptionElement.classList.add('message');
                     temperatureElement.textContent = '--°C';
                     weatherIconElement.innerHTML = `<span class="material-symbols-outlined">warning</span>`;
-                     if (displayToggleIntervalId) clearInterval(displayToggleIntervalId); // データ不備ならタイマーも止める
+                     if (displayToggleIntervalId) {
+                        clearInterval(displayToggleIntervalId);
+                        displayToggleIntervalId = null; // データ不備ならタイマーも止める
+                     }
                 }
 
             } catch (error) {
                 console.error('天気情報の取得に失敗しました:', error);
-                todayWeatherData = null; // エラー時もクリア
+                todayWeatherData = null;
                 tomorrowWeatherData = null;
                 weatherDescriptionElement.textContent = error.message && error.message.includes('APIエラー') ? error.message : '天気情報取得エラー';
                 weatherDescriptionElement.classList.add('message');
                 temperatureElement.textContent = '--°C';
                 weatherIconElement.innerHTML = `<span class="material-symbols-outlined">error</span>`;
-                if (displayToggleIntervalId) clearInterval(displayToggleIntervalId); // エラーならタイマーも止める
+                if (displayToggleIntervalId) {
+                    clearInterval(displayToggleIntervalId);
+                    displayToggleIntervalId = null; // エラーならタイマーも止める
+                }
             }
         }
 
@@ -372,7 +392,7 @@
         // 1秒ごとに時刻を更新
         setInterval(updateTime, 1000);
         // 15分ごとに天気情報を再取得
-        if (weatherIntervalId) clearInterval(weatherIntervalId); // 念のためクリア
+        if (weatherIntervalId) clearInterval(weatherIntervalId);
         weatherIntervalId = setInterval(fetchWeather, 15 * 60 * 1000);
 
 
@@ -386,10 +406,11 @@
             const targetWidth = viewportWidth * 0.95;
             const targetHeight = viewportHeight * 0.95;
 
-            if (targetWidth / targetHeight > 16 / 9) {
+            // 16:9 アスペクト比をターゲット
+            if (targetWidth / targetHeight > 16 / 9) { // ビューポートがターゲットより横長の場合 (高さ基準)
                 newHeight = targetHeight;
                 newWidth = newHeight * 16 / 9;
-            } else {
+            } else { // ビューポートがターゲットより縦長または等しい場合 (幅基準)
                 newWidth = targetWidth;
                 newHeight = newWidth * 9 / 16;
             }
