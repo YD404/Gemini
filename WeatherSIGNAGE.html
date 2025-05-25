@@ -4,13 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>川崎市 時刻・天気</title>
-    <script src="https://cdn.tailwindcss.com"></script> <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.tailwindcss.com"></script> 
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Roboto+Mono:wght@400;500;700&family=Orbitron:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #0A0A0A;
+            --panel-bg-color: #1C1C1C;
+            --border-color: #444444;
+            --text-color-primary: #E0E0E0;
+            --text-color-secondary: #A0A0A0;
+            --text-color-accent: #FFFFFF;
+            --line-color: #333333;
+            --font-primary: 'Noto Sans JP', sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
+            --font-display: 'Orbitron', sans-serif;
+            --animation-duration: 1.0s; /* フェードアニメーションの時間 */
+        }
 
         body {
-            font-family: 'Noto Sans JP', sans-serif;
-            background-color: #111111;
+            font-family: var(--font-primary);
+            background-color: var(--bg-color);
+            color: var(--text-color-primary);
             margin: 0;
             padding: 0;
             display: flex;
@@ -24,22 +40,20 @@
         .signage-container {
             width: 100%;
             height: 100%;
-            background-color: #222222;
+            background-color: var(--panel-bg-color);
             display: flex; 
             flex-direction: column; 
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            box-shadow: 0 0 20px rgba(255,255,255,0.1);
-            border: 10px solid #555555;
+            border: 2px solid var(--border-color);
             box-sizing: border-box;
             position: relative;
+            padding: 1.5vmin;
         }
 
         .aspect-ratio-wrapper {
-            width: 95vw;
-            max-width: calc(95vh * 16 / 9); /* 16:9 横表示 */
-            height: calc(95vw * 9 / 16);   /* 16:9 横表示 */
-            max-height: 95vh;
+            width: 100%; 
+            height: 100%;
             position: relative;
             display: flex; 
             justify-content: center;
@@ -51,45 +65,83 @@
             flex-direction: column; 
             width: 100%;
             height: 100%;
-            padding: 3vmin;
             box-sizing: border-box;
+        }
+        
+        .signage-header, .signage-footer {
+            width: calc(100% - 3vmin); 
+            padding: 1vmin 1.5vmin;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 2vmin;
+            color: var(--text-color-secondary);
+            position: absolute;
+            left: 1.5vmin;
+            right: 1.5vmin;
+            box-sizing: border-box;
+            z-index: 10; 
+        }
+        .signage-header {
+            top: 1.5vmin;
+            border-bottom: 1px solid var(--line-color);
+        }
+        .signage-footer {
+            bottom: 1.5vmin;
+            border-top: 1px solid var(--line-color);
+        }
+        .status-text-left { text-align: left; }
+        .status-text-right { text-align: right; }
+
+        .main-content-wrapper { 
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            width: 100%;
+            padding-top: 6vmin; 
+            padding-bottom: 6vmin; 
+            box-sizing: border-box;
+            justify-content: space-around; 
         }
 
         .time-section {
-            background-color: #333333;
-            border: 2px solid #666666;
-            border-radius: 8px;
-            padding: 2vmin 3vmin; 
+            background-color: transparent; 
+            border: 1px solid var(--line-color);
+            border-radius: 0; 
+            padding: 2vmin;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            color: #dddddd;
-            margin-bottom: 3vmin; 
+            color: var(--text-color-primary);
+            margin-bottom: 2vmin; 
+            min-height: 30%; 
         }
 
         .weather-section {
             flex-grow: 1; 
-            background-color: #333333;
-            border: 2px solid #666666;
-            border-radius: 8px;
-            padding: 2vmin;
+            background-color: transparent;
+            border: 1px solid var(--line-color);
+            border-radius: 0;
+            padding: 1.5vmin;
             box-sizing: border-box;
             display: flex; 
             flex-direction: row; 
-            align-items: center;
+            align-items: stretch; 
             text-align: center;
-            color: #dddddd;
+            color: var(--text-color-primary);
         }
 
         #time {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 15vmin;
-            font-weight: 700;
+            font-family: var(--font-mono);
+            font-size: 18vmin; 
+            font-weight: 500;
             line-height: 1;
-            color: #eeeeee;
+            color: var(--text-color-accent);
+            letter-spacing: -0.05em; 
         }
 
         #date-container { 
@@ -97,22 +149,27 @@
             flex-direction: column; 
             align-items: center;
             justify-content: center;
-            margin-top: 1vmin;
-            min-height: 7vh; 
+            margin-top: 0.5vmin; 
+            min-height: auto; 
+            width: 100%; 
+            height: 7vh; 
+            transition: opacity var(--animation-duration) ease-in-out; /* フェード用 */
+            opacity: 1; /* 初期表示 */
         }
-
+        
         #date { 
-            color: #cccccc;
-            text-align: center;
-            overflow: hidden; 
-            padding-left: 1vmin; 
-            padding-right: 1vmin;
-            line-height: 1.3; 
+            font-family: var(--font-mono);
+            color: var(--text-color-secondary);
+            padding: 0 0.5vmin; 
+            line-height: 1.2; 
+            font-weight: 300;
         }
-        #attribution-text {
-            font-size: 1.8vmin; 
-            color: #888888; 
+        #attribution-text { 
+            font-family: var(--font-mono);
+            font-size: 1.5vmin; 
+            color: #666; 
             margin-top: 0.5vmin;
+            letter-spacing: 0.05em;
         }
 
 
@@ -120,76 +177,88 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100%;
-            flex: 0.7; 
+            flex: 0.4; 
+            border-right: 1px solid var(--line-color); 
+            padding-right: 1.5vmin;
+            transition: opacity var(--animation-duration) ease-in-out; /* フェード用 */
         }
-
+        
         #weather-icon {
             width: auto;
             height: auto;
-            max-width: 25vmin; 
-            max-height: 25vmin;
-            border-radius: 8px;
-            padding: 1.5vmin;
+            max-width: 20vmin; 
+            max-height: 20vmin;
+            background-color: transparent; 
+            border-radius: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            aspect-ratio: 1 / 1; 
             margin: 0; 
         }
         #weather-icon .material-symbols-outlined {
-            font-size: 38vmin; 
-            color: #ffffffff; 
+            font-size: 22vmin; 
+            color: var(--text-color-primary); 
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 48; 
         }
 
         .weather-details {
-            flex: 1.3; 
-            font-size: 3.8vmin;
+            flex: 0.6; 
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+            position: relative; 
+            padding-left: 1.5vmin;
+            width: 100%; 
+            transition: opacity var(--animation-duration) ease-in-out; /* フェード用 */
+            opacity: 1; /* 初期表示 */
+        }
+        
+        #weather-info-display, #graph-display-wrapper { 
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100%;
-            text-align: center;
-            width: 100%; 
-            position: relative; 
-        }
-        .weather-details > div:not(#temp-graph-container) { 
-            margin-bottom: 0.5vmin;
-        }
-        .weather-details > div:last-child:not(#temp-graph-container) {
-            margin-bottom: 0;
         }
 
 
         #temperature {
-            font-size: 16vmin;
-            font-weight: 700;
-            color: #eeeeee;
-            line-height: 1.1;
+            font-family: var(--font-mono);
+            font-size: 14vmin; 
+            font-weight: 500;
+            color: var(--text-color-accent);
+            line-height: 1;
         }
         #weather-description {
-            font-size: 3.0vmin;
-            color: #cccccc;
-            line-height: 1.3;
-            padding: 0 1vmin;
+            font-family: var(--font-primary);
+            font-size: 2.8vmin;
+            color: var(--text-color-secondary);
+            line-height: 1.2;
+            padding: 0 0.5vmin;
+            font-weight: 300;
         }
         #city-name {
-            font-size: 2.3vmin;
-            color: #bbbbbb;
-            margin-top: 0.5vmin;
+            font-family: var(--font-mono);
+            font-size: 2.0vmin;
+            color: #777; 
+            margin-top: 0.2vmin;
+            text-transform: uppercase; 
+            letter-spacing: 0.1em;
         }
 
         .message {
-            font-size: 3.5vmin;
-            color: #bbbbbb;
+            font-family: var(--font-mono);
+            font-size: 3vmin;
+            color: var(--text-color-secondary);
         }
 
-        .hidden {
+        .hidden { 
             display: none !important;
         }
 
-        #temp-graph-container {
+        #temp-graph-container { 
             display: flex;
             flex-direction: column;
             justify-content: flex-start; 
@@ -197,16 +266,18 @@
             width: 100%;
             height: 100%;
             box-sizing: border-box;
-            padding: 1vmin 0; 
+            padding: 0.5vmin 0; 
         }
         .graph-title {
-            font-size: 2vmin;
-            color: #eeeeee;
-            margin-bottom: 0.1vmin; 
+            font-family: var(--font-mono);
+            font-size: 2.2vmin;
+            color: var(--text-color-primary);
+            margin-bottom: 0.5vmin; 
             text-align: center;
+            font-weight: 400;
         }
         .svg-graph-wrapper { 
-            width: 98%; 
+            width: 100%; 
             flex-grow: 1; 
             display: flex;
             justify-content: center;
@@ -215,43 +286,61 @@
         #temp-line-graph { 
         }
         .axis-label {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 1.8vmin; 
-            fill: #cccccc;
+            font-family: var(--font-mono);
+            font-size: 1.6vmin; 
+            fill: var(--text-color-secondary);
+            font-weight: 300;
         }
         .temp-value-label {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 3.0vmin; 
-            fill: #dddddd;
+            font-family: var(--font-mono);
+            font-size: 2.2vmin; 
+            fill: var(--text-color-primary);
+            font-weight: 400;
         }
-
+        #temp-line-graph .graph-line {
+            stroke: var(--text-color-primary);
+            stroke-width: 2.5; 
+        }
+        #temp-line-graph .graph-circle {
+            fill: var(--text-color-primary);
+            stroke: var(--panel-bg-color); 
+            stroke-width: 1;
+        }
+        #temp-line-graph .axis {
+            stroke: var(--line-color);
+        }
     </style>
 </head>
 <body>
     <div class="aspect-ratio-wrapper">
         <div class="signage-container">
-            <div class="content-area">
-                <div class="time-section">
-                    <div id="time" class="font-roboto-mono">--:--:--</div>
-                    <div id="date-container"> 
-                        <div id="date" class="font-noto">----年--月--日 (-)</div>
-                        <div id="attribution-text" class="font-noto hidden"></div> 
-                    </div>
-                </div>
-                <div class="weather-section">
-                    <div class="weather-icon-container"> 
-                        <div id="weather-icon">
-                            <span class="material-symbols-outlined">help</span>
+            <div class="signage-header">
+                <span class="status-text-left">SYSTEM STATUS: ONLINE</span>
+                <span class="status-text-right" id="current-location-display">LOCATION: KAWASAKI</span>
+            </div>
+            <div class="main-content-wrapper">
+                <div class="content-area">
+                    <div class="time-section">
+                        <div id="time" class="font-roboto-mono">--:--:--</div>
+                        <div id="date-container"> 
+                            {/* 日付・ニュースコンテンツはJSで直接 #date-container に挿入 */}
                         </div>
                     </div>
-                    <div class="weather-details">
-                        <div id="temperature" class="font-roboto-mono">--°C</div>
-                        <div id="weather-description" class="font-noto">読み込み中...</div>
-                        <div id="city-name" class="font-noto">川崎市</div>
-                        <div id="temp-graph-container" class="hidden">
+                    <div class="weather-section">
+                        <div class="weather-icon-container"> 
+                            <div id="weather-icon">
+                                <span class="material-symbols-outlined">help</span>
+                            </div>
+                        </div>
+                        <div class="weather-details">
+                             {/* 天気情報・グラフはJSで直接 #weather-details に挿入 */}
                         </div>
                     </div>
                 </div>
+            </div>
+             <div class="signage-footer">
+                <span class="status-text-left" id="data-source-info">DATA RETRIEVAL: ACTIVE</span>
+                <span class="status-text-right">ARCHIVE MODE</span>
             </div>
         </div>
     </div>
@@ -261,14 +350,15 @@
         var longitude = 139.7036;
 
         var timeElement = document.getElementById('time');
-        var dateElement = document.getElementById('date');
-        var attributionTextElement = document.getElementById('attribution-text'); 
+        var dateContainerElement = document.getElementById('date-container'); 
+        
         var weatherIconContainerElement = document.querySelector('.weather-icon-container');
         var weatherIconElement = document.getElementById('weather-icon');
-        var temperatureElement = document.getElementById('temperature');
-        var weatherDescriptionElement = document.getElementById('weather-description');
-        var cityNameElement = document.getElementById('city-name');
-        var tempGraphContainerElement = document.getElementById('temp-graph-container');
+        
+        var weatherDetailsElement = document.querySelector('.weather-details'); 
+        
+        var currentLocationDisplay = document.getElementById('current-location-display');
+        var dataSourceInfo = document.getElementById('data-source-info');
 
         var todayWeatherData = null;
         var tomorrowWeatherData = null;
@@ -276,14 +366,16 @@
         var weeklyDates = []; 
 
         var newsHeadlines = []; 
-        var dateNewsDisplayState = 0; // 0: 日付, 1-N: ニュース(Nは取得件数)
+        var dateNewsDisplayState = 0; 
         var dateNewsToggleIntervalId = null; 
         var newsFetchIntervalId = null; 
-
 
         var displayState = 0; 
         var weatherIntervalId = null;
         var displayToggleIntervalId = null;
+
+        var animationDuration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration') || '0.4') * 1000;
+
 
         function customPadStart(str, targetLength, padString) {
             str = String(str);
@@ -300,39 +392,72 @@
             }
         }
         
-        function updateDateOrNewsDisplay() {
-            attributionTextElement.classList.add('hidden'); 
+        function animateElementSwitch(element, newContentCallback) {
+            element.style.opacity = 0; // フェードアウト開始
+            setTimeout(function() {
+                newContentCallback(); // コンテンツを更新
+                element.style.opacity = 1; // フェードイン開始
+            }, animationDuration / 2); // アニメーション時間の中間でコンテンツを入れ替え
+        }
 
-            if (dateNewsDisplayState === 0) { // 日付表示
-                var now = new Date();
-                var year = now.getFullYear();
-                var month = customPadStart(now.getMonth() + 1, 2, '0');
-                var day = customPadStart(now.getDate(), 2, '0');
-                var dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
-                dateElement.textContent = year + "年" + month + "月" + day + "日 (" + dayOfWeek + ")";
-                dateElement.style.fontSize = "4.5vmin"; 
-                dateElement.style.whiteSpace = "nowrap"; 
-                attributionTextElement.textContent = "weather by Open-Meteo, News by Zenn"; // 出典をZennに変更
-                attributionTextElement.classList.remove('hidden'); 
-            } else if (dateNewsDisplayState > 0 && newsHeadlines.length >= dateNewsDisplayState) { // ニュース表示
-                dateElement.textContent = newsHeadlines[dateNewsDisplayState - 1]; // 配列のインデックスに合わせる
-                dateElement.style.fontSize = "3.5vmin"; 
-                dateElement.style.whiteSpace = "normal"; 
-            } else { // フォールバック (ニュースがない場合やインデックス不正など)
-                var now = new Date();
-                var year = now.getFullYear();
-                var month = customPadStart(now.getMonth() + 1, 2, '0');
-                var day = customPadStart(now.getDate(), 2, '0');
-                var dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
-                dateElement.textContent = year + "年" + month + "月" + day + "日 (" + dayOfWeek + ")";
-                dateElement.style.fontSize = "4.5vmin";
-                dateElement.style.whiteSpace = "nowrap";
-                attributionTextElement.textContent = "weather by Open-Meteo, News by Zenn";
-                attributionTextElement.classList.remove('hidden');
-                
-                // 予期せぬ表示状態になった場合は日付に戻す
-                dateNewsDisplayState = 0; 
-            }
+
+        function updateDateOrNewsDisplay() {
+            animateElementSwitch(dateContainerElement, function() {
+                dateContainerElement.innerHTML = ''; 
+
+                var dateTextDiv = document.createElement('div');
+                dateTextDiv.id = 'date'; 
+                dateTextDiv.style.fontFamily = 'var(--font-mono)';
+                dateTextDiv.style.color = 'var(--text-color-secondary)';
+                dateTextDiv.style.padding = '0 0.5vmin';
+                dateTextDiv.style.lineHeight = '1.2';
+                dateTextDiv.style.fontWeight = '300';
+                dateTextDiv.style.textAlign = 'center';
+
+                var attributionTextDiv = document.createElement('div');
+                attributionTextDiv.id = 'attribution-text'; 
+                attributionTextDiv.style.fontFamily = 'var(--font-mono)';
+                attributionTextDiv.style.fontSize = '1.5vmin';
+                attributionTextDiv.style.color = '#666';
+                attributionTextDiv.style.marginTop = '0.5vmin';
+                attributionTextDiv.style.letterSpacing = '0.05em';
+                attributionTextDiv.style.textAlign = 'center';
+
+                if (dateNewsDisplayState === 0) { 
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = customPadStart(now.getMonth() + 1, 2, '0');
+                    var day = customPadStart(now.getDate(), 2, '0');
+                    var dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+                    dateTextDiv.textContent = year + "年" + month + "月" + day + "日 (" + dayOfWeek + ")";
+                    dateTextDiv.style.fontSize = "4vmin"; 
+                    dateTextDiv.style.whiteSpace = "nowrap"; 
+                    
+                    attributionTextDiv.textContent = "天気: Open-Meteo / ニュース: Zenn"; 
+                    dateContainerElement.appendChild(dateTextDiv);
+                    dateContainerElement.appendChild(attributionTextDiv);
+
+                } else if (dateNewsDisplayState > 0 && newsHeadlines.length >= dateNewsDisplayState) { 
+                    var newsIndex = dateNewsDisplayState - 1;
+                    dateTextDiv.textContent = newsHeadlines[newsIndex]; 
+                    dateTextDiv.style.fontSize = "3vmin"; 
+                    dateTextDiv.style.whiteSpace = "normal"; 
+                    dateContainerElement.appendChild(dateTextDiv);
+                } else { 
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = customPadStart(now.getMonth() + 1, 2, '0');
+                    var day = customPadStart(now.getDate(), 2, '0');
+                    var dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+                    dateTextDiv.textContent = year + "年" + month + "月" + day + "日 (" + dayOfWeek + ")";
+                    dateTextDiv.style.fontSize = "4vmin";
+                    dateTextDiv.style.whiteSpace = "nowrap";
+                    attributionTextDiv.textContent = "天気: Open-Meteo / ニュース: Zenn";
+                    dateContainerElement.appendChild(dateTextDiv);
+                    dateContainerElement.appendChild(attributionTextDiv);
+                    dateNewsDisplayState = 0; 
+                }
+            });
         }
 
 
@@ -346,15 +471,16 @@
 
 
         function fetchNews() {
-            var rssUrl = "https://zenn.dev/topics/ai/feed"; // Zenn AIトピックRSS URLに変更
+            var rssUrl = "https://zenn.dev/topics/ai/feed"; 
             var proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rssUrl);
-            console.log("ニュース取得試行中: " + proxyUrl); 
+            dataSourceInfo.textContent = "ニュース取得中...";
 
             fetch(proxyUrl, { cache: 'no-store' }) 
                 .then(function(response) {
                     if (!response.ok) {
                         return response.text().then(function(text) {
                             console.error("RSS取得エラーレスポンス:", text);
+                             dataSourceInfo.textContent = "ニュース取得エラー";
                             throw new Error("RSS取得エラー: " + response.status + " - " + response.statusText);
                         });
                     }
@@ -366,45 +492,40 @@
                     var errorNode = xmlDoc.querySelector("parsererror"); 
                     if (errorNode) {
                         console.error("RSS解析エラー (parsererror):", errorNode.textContent);
+                        dataSourceInfo.textContent = "ニュース解析エラー";
                         throw new Error("RSS解析エラー");
                     }
-                    var items = xmlDoc.getElementsByTagName("entry"); // Zennは<entry>
+                    var items = xmlDoc.getElementsByTagName("entry");
                     if (items.length === 0) { 
-                        items = xmlDoc.getElementsByTagName("item"); // Fallback
+                        items = xmlDoc.getElementsByTagName("item");
                     }
 
                     var fetchedHeadlines = [];
-                    // 取得できる全てのヘッドラインを格納 (最大件数はフィードによる)
                     for (var i = 0; i < items.length; i++) { 
                         var titleElement = items[i].getElementsByTagName("title")[0];
                         if (titleElement) {
-                            fetchedHeadlines.push(titleElement.textContent);
+                            fetchedHeadlines.push(titleElement.textContent.trim()); 
                         }
                     }
                     newsHeadlines = fetchedHeadlines;
+
                     if (newsHeadlines.length === 0) {
                         console.warn("ニュースヘッドラインを取得できませんでした。");
-                        if (dateNewsDisplayState > 0) { 
-                             dateElement.textContent = "ニュースなし";
-                             dateElement.style.fontSize = "3.5vmin";
-                             dateElement.style.whiteSpace = "normal";
-                             attributionTextElement.classList.add('hidden');
-                        }
+                        dataSourceInfo.textContent = "ニュースなし";
+                    } else {
+                        dataSourceInfo.textContent = "DATA RETRIEVAL: ACTIVE";
                     }
-                    // ニュース取得後、表示状態がニュースであれば更新
-                    if (dateNewsDisplayState > 0) { 
-                        updateDateOrNewsDisplay();
+                    if (dateNewsDisplayState > newsHeadlines.length) {
+                        dateNewsDisplayState = 0; 
                     }
+                    updateDateOrNewsDisplay(); 
                 })
                 .catch(function(error) {
                     console.error("ニュース取得または解析最終エラー:", error);
                     newsHeadlines = []; 
-                    if (dateNewsDisplayState > 0) { 
-                        dateElement.textContent = "ニュース取得エラー"; 
-                        dateElement.style.fontSize = "3.5vmin";
-                        dateElement.style.whiteSpace = "normal";
-                        attributionTextElement.classList.add('hidden');
-                    }
+                    dataSourceInfo.textContent = "ニュース取得失敗";
+                    dateNewsDisplayState = 0; 
+                    updateDateOrNewsDisplay();
                 });
         }
 
@@ -430,21 +551,33 @@
         }
 
         function renderTemperatureLineGraph(temps, dates) {
-            tempGraphContainerElement.innerHTML = ''; 
+            var graphContainer = weatherDetailsElement.querySelector('#temp-graph-container'); 
+            if (!graphContainer) {
+                var graphDisplayWrapper = weatherDetailsElement.querySelector('#graph-display-wrapper');
+                if(graphDisplayWrapper) {
+                    graphContainer = document.createElement('div');
+                    graphContainer.id = 'temp-graph-container';
+                    graphDisplayWrapper.appendChild(graphContainer);
+                } else {
+                    console.error("graph-display-wrapper not found for graph rendering");
+                    return;
+                }
+            }
+            graphContainer.innerHTML = ''; 
 
             if (!temps || temps.length === 0) {
-                tempGraphContainerElement.innerHTML = '<div class="message" style="text-align:center; width:100%;">比較できる気温データがありません</div>';
+                graphContainer.innerHTML = '<div class="message" style="text-align:center; width:100%;">比較できる気温データがありません</div>';
                 return;
             }
             
             var graphTitle = document.createElement('div');
             graphTitle.className = 'graph-title';
             graphTitle.textContent = '週間最高気温';
-            tempGraphContainerElement.appendChild(graphTitle);
+            graphContainer.appendChild(graphTitle);
 
             var svgWrapper = document.createElement('div');
             svgWrapper.className = 'svg-graph-wrapper';
-            tempGraphContainerElement.appendChild(svgWrapper);
+            graphContainer.appendChild(svgWrapper);
 
             var svgNS = "http://www.w3.org/2000/svg";
             var svg = document.createElementNS(svgNS, "svg");
@@ -456,7 +589,7 @@
             var svgWidth = svgWrapper.offsetWidth || 200; 
             var svgHeight = svgWrapper.offsetHeight || 100; 
 
-            var margin = { top: 20, right: 20, bottom: 45, left: 35 }; 
+            var margin = { top: 15, right: 15, bottom: 35, left: 30 }; 
             var graphWidth = svgWidth - margin.left - margin.right;
             var graphHeight = svgHeight - margin.top - margin.bottom;
 
@@ -497,7 +630,7 @@
             });
             if (yMin === Infinity) { yMin = 0; yMax = 30;} 
             
-            var yPadding = (yMax - yMin) * 0.15 || 5; 
+            var yPadding = (yMax - yMin) * 0.2 || 5; 
             yMin = Math.floor(yMin - yPadding);
             yMax = Math.ceil(yMax + yPadding);
             if (yMin === yMax) { yMin -= 5; yMax += 5; }
@@ -515,7 +648,7 @@
             var yAxisLine = document.createElementNS(svgNS, "line");
             yAxisLine.setAttribute("x1", "0"); yAxisLine.setAttribute("y1", "0");
             yAxisLine.setAttribute("x2", "0"); yAxisLine.setAttribute("y2", graphHeight);
-            yAxisLine.setAttribute("stroke", "#777"); yAxisLine.setAttribute("stroke-width", "1");
+            yAxisLine.setAttribute("class", "axis"); 
             g.appendChild(yAxisLine);
 
             var numYTicks = 3; 
@@ -524,7 +657,7 @@
                 if (i === numYTicks/2 && numYTicks % 2 === 0 && numYTicks > 1) continue; 
                 var yLabel = document.createElementNS(svgNS, "text");
                 yLabel.setAttribute("class", "axis-label");
-                yLabel.setAttribute("x", -5);
+                yLabel.setAttribute("x", -4); 
                 yLabel.setAttribute("y", scaleY(val));
                 yLabel.setAttribute("dy", "0.35em");
                 yLabel.setAttribute("text-anchor", "end");
@@ -535,7 +668,7 @@
             var xAxisLine = document.createElementNS(svgNS, "line");
             xAxisLine.setAttribute("x1", "0"); xAxisLine.setAttribute("y1", graphHeight);
             xAxisLine.setAttribute("x2", graphWidth); xAxisLine.setAttribute("y2", graphHeight);
-            xAxisLine.setAttribute("stroke", "#777"); xAxisLine.setAttribute("stroke-width", "1");
+            xAxisLine.setAttribute("class", "axis"); 
             g.appendChild(xAxisLine);
 
             var linePath = "";
@@ -553,8 +686,7 @@
                 var line = document.createElementNS(svgNS, "path");
                 line.setAttribute("d", linePath);
                 line.setAttribute("fill", "none");
-                line.setAttribute("stroke", "#eeeeee");
-                line.setAttribute("stroke-width", "3.5"); 
+                line.setAttribute("class", "graph-line"); 
                 line.setAttribute("stroke-linecap", "round");
                 line.setAttribute("stroke-linejoin", "round");
                 g.appendChild(line);
@@ -566,16 +698,14 @@
                 var circle = document.createElementNS(svgNS, "circle");
                 circle.setAttribute("cx", xPos);
                 circle.setAttribute("cy", yPos);
-                circle.setAttribute("r", "3.5"); 
-                circle.setAttribute("fill", "#eeeeee");
-                circle.setAttribute("stroke", "#333333");
-                circle.setAttribute("stroke-width", "1.5");
+                circle.setAttribute("r", "3"); 
+                circle.setAttribute("class", "graph-circle"); 
                 g.appendChild(circle);
 
                 var tempValLabel = document.createElementNS(svgNS, "text");
                 tempValLabel.setAttribute("class", "temp-value-label");
                 tempValLabel.setAttribute("x", xPos);
-                tempValLabel.setAttribute("y", yPos - 8); 
+                tempValLabel.setAttribute("y", yPos - 7); 
                 tempValLabel.setAttribute("text-anchor", "middle");
                 tempValLabel.textContent = p.temp + "°";
                 g.appendChild(tempValLabel);
@@ -583,87 +713,107 @@
                 var xLabel = document.createElementNS(svgNS, "text");
                 xLabel.setAttribute("class", "axis-label");
                 xLabel.setAttribute("x", xPos);
-                xLabel.setAttribute("y", graphHeight + 18); 
+                xLabel.setAttribute("y", graphHeight + 15); 
                 xLabel.setAttribute("text-anchor", "middle");
                 xLabel.textContent = p.label;
                 g.appendChild(xLabel);
             });
         }
 
-
         function updateWeatherDisplay() {
-            temperatureElement.classList.add('hidden');
-            weatherDescriptionElement.classList.add('hidden');
-            cityNameElement.classList.add('hidden');
-            tempGraphContainerElement.classList.add('hidden');
-            weatherIconContainerElement.classList.add('hidden'); 
+            animateElementSwitch(weatherDetailsElement, function() {
+                weatherDetailsElement.innerHTML = ''; 
 
-            if (displayState === 0 && todayWeatherData) { 
-                weatherIconContainerElement.classList.remove('hidden');
-                temperatureElement.classList.remove('hidden');
-                weatherDescriptionElement.classList.remove('hidden');
-                cityNameElement.classList.remove('hidden');
+                if (displayState === 2) { 
+                    weatherIconContainerElement.style.display = 'none'; 
+                    weatherDetailsElement.style.flex = '1'; 
+                    weatherDetailsElement.style.paddingLeft = '0';
 
-                var weatherInfo = getWeatherInfoFromWMOCode(todayWeatherData.weathercode);
-                weatherIconElement.innerHTML = '<span class="material-symbols-outlined">' + weatherInfo.icon + '</span>';
-                temperatureElement.textContent = todayWeatherData.temperature + "°C";
-                var desc = "今日: " + weatherInfo.description;
-                if (todayWeatherData.max_temp !== null && todayWeatherData.min_temp !== null) {
-                    desc += " (最高 " + todayWeatherData.max_temp + "°C / 最低 " + todayWeatherData.min_temp + "°C)";
+                    var graphDisplayWrapper = document.createElement('div');
+                    graphDisplayWrapper.id = 'graph-display-wrapper'; 
+                    graphDisplayWrapper.style.width = '100%';
+                    graphDisplayWrapper.style.height = '100%';
+                    graphDisplayWrapper.style.display = 'flex';
+                    graphDisplayWrapper.style.flexDirection = 'column';
+                    graphDisplayWrapper.style.justifyContent = 'center';
+                    graphDisplayWrapper.style.alignItems = 'center';
+                    
+                    var tempGraphContainer = document.createElement('div');
+                    tempGraphContainer.id = 'temp-graph-container'; 
+                    graphDisplayWrapper.appendChild(tempGraphContainer);
+                    weatherDetailsElement.appendChild(graphDisplayWrapper);
+
+                    if (weeklyMaxTemps.length > 0 && weeklyDates.length > 0) {
+                        setTimeout(function() { 
+                            renderTemperatureLineGraph(weeklyMaxTemps, weeklyDates);
+                        }, 0); 
+                    } else {
+                        tempGraphContainer.innerHTML = '<div class="message" style="text-align:center; width:100%;">週間気温データ取得中...</div>';
+                    }
+                } else { 
+                    weatherIconContainerElement.style.display = 'flex'; 
+                    weatherDetailsElement.style.flex = '0.6'; 
+                    weatherDetailsElement.style.paddingLeft = '1.5vmin';
+
+                    var weatherInfoDisplay = document.createElement('div');
+                    weatherInfoDisplay.id = 'weather-info-display'; 
+                    weatherInfoDisplay.style.width = '100%';
+                    weatherInfoDisplay.style.height = '100%';
+                    weatherInfoDisplay.style.display = 'flex';
+                    weatherInfoDisplay.style.flexDirection = 'column';
+                    weatherInfoDisplay.style.justifyContent = 'center';
+                    weatherInfoDisplay.style.alignItems = 'center';
+
+                    var tempEl = document.createElement('div');
+                    tempEl.id = 'temperature'; 
+                    tempEl.className = 'font-roboto-mono';
+                    weatherInfoDisplay.appendChild(tempEl);
+
+                    var descEl = document.createElement('div');
+                    descEl.id = 'weather-description';
+                    descEl.className = 'font-noto';
+                    weatherInfoDisplay.appendChild(descEl);
+
+                    var cityEl = document.createElement('div');
+                    cityEl.id = 'city-name';
+                    cityEl.className = 'font-noto';
+                    weatherInfoDisplay.appendChild(cityEl);
+                    
+                    weatherDetailsElement.appendChild(weatherInfoDisplay);
+
+                    if (displayState === 0 && todayWeatherData) { 
+                        tempEl.textContent = todayWeatherData.temperature + "°C";
+                        var weatherInfo = getWeatherInfoFromWMOCode(todayWeatherData.weathercode);
+                        weatherIconElement.innerHTML = '<span class="material-symbols-outlined">' + weatherInfo.icon + '</span>';
+                        var descText = "今日: " + weatherInfo.description;
+                        if (todayWeatherData.max_temp !== null && todayWeatherData.min_temp !== null) {
+                            descText += " (最高 " + todayWeatherData.max_temp + "°C / 最低 " + todayWeatherData.min_temp + "°C)";
+                        }
+                        descEl.textContent = descText;
+                    } else if (displayState === 1 && tomorrowWeatherData) { 
+                        tempEl.textContent = tomorrowWeatherData.max_temp !== null ? tomorrowWeatherData.max_temp + "°C" : '--°C';
+                        var weatherInfo = getWeatherInfoFromWMOCode(tomorrowWeatherData.weathercode);
+                        weatherIconElement.innerHTML = '<span class="material-symbols-outlined">' + weatherInfo.icon + '</span>';
+                        var descText = "明日: " + weatherInfo.description;
+                        if (tomorrowWeatherData.max_temp !== null && tomorrowWeatherData.min_temp !== null) {
+                            descText += " (最高 " + tomorrowWeatherData.max_temp + "°C / 最低 " + tomorrowWeatherData.min_temp + "°C)";
+                        }
+                        descEl.textContent = descText;
+                    } else {
+                        weatherIconElement.innerHTML = '<span class="material-symbols-outlined">help</span>';
+                        tempEl.textContent = '--°C';
+                        descEl.textContent = "読込中...";
+                    }
+                    cityEl.textContent = '川崎市';
                 }
-                weatherDescriptionElement.textContent = desc;
-                weatherDescriptionElement.classList.remove('message');
-
-            } else if (displayState === 1 && tomorrowWeatherData) { 
-                weatherIconContainerElement.classList.remove('hidden');
-                temperatureElement.classList.remove('hidden');
-                weatherDescriptionElement.classList.remove('hidden');
-                cityNameElement.classList.remove('hidden');
-
-                var weatherInfo = getWeatherInfoFromWMOCode(tomorrowWeatherData.weathercode);
-                weatherIconElement.innerHTML = '<span class="material-symbols-outlined">' + weatherInfo.icon + '</span>';
-                temperatureElement.textContent = tomorrowWeatherData.max_temp !== null ? tomorrowWeatherData.max_temp + "°C" : '--°C';
-                var desc = "明日: " + weatherInfo.description;
-                if (tomorrowWeatherData.max_temp !== null && tomorrowWeatherData.min_temp !== null) {
-                    desc += " (最高 " + tomorrowWeatherData.max_temp + "°C / 最低 " + tomorrowWeatherData.min_temp + "°C)";
-                }
-                weatherDescriptionElement.textContent = desc;
-                weatherDescriptionElement.classList.remove('message');
-
-            } else if (displayState === 2) { 
-                tempGraphContainerElement.classList.remove('hidden');
-                document.querySelector('.weather-details').style.flex = '2'; 
-                weatherIconContainerElement.classList.add('hidden'); 
-
-                if (weeklyMaxTemps.length > 0 && weeklyDates.length > 0) {
-                    setTimeout(function() {
-                        renderTemperatureLineGraph(weeklyMaxTemps, weeklyDates);
-                    }, 0);
-                } else {
-                    tempGraphContainerElement.innerHTML = '<div class="message" style="text-align:center; width:100%;">週間気温データ取得中...</div>';
-                }
-                 weatherDescriptionElement.classList.add('message'); 
-                 weatherDescriptionElement.textContent = ''; 
-
-            } else { 
-                weatherIconContainerElement.classList.remove('hidden'); 
-                weatherIconElement.innerHTML = '<span class="material-symbols-outlined">help</span>';
-                temperatureElement.textContent = '--°C';
-                temperatureElement.classList.remove('hidden');
-                weatherDescriptionElement.textContent = "読込中...";
-                weatherDescriptionElement.classList.add('message');
-                weatherDescriptionElement.classList.remove('hidden');
-                cityNameElement.classList.remove('hidden');
-            }
-            if (displayState !== 2) { 
-                 document.querySelector('.weather-details').style.flex = '1.3';
-            }
-            cityNameElement.textContent = '川崎市'; 
+            });
+            currentLocationDisplay.textContent = 'LOCATION: KAWASAKI'; 
         }
 
 
         function fetchWeather() {
             var apiUrl = "https://api.open-meteo.com/v1/forecast?latitude=" + latitude + "&longitude=" + longitude + "&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia/Tokyo&forecast_days=7";
+            dataSourceInfo.textContent = "気象データ取得中...";
 
             fetch(apiUrl)
                 .then(function(response) {
@@ -671,6 +821,7 @@
                         var errorText = "APIエラー: " + response.status + " " + response.statusText;
                         return response.text().then(function(text) {
                             try { var errorData = JSON.parse(text); if (errorData && errorData.reason) { errorText = "APIエラー: " + errorData.reason; }} catch (e) {}
+                            dataSourceInfo.textContent = "気象データ取得エラー";
                             throw new Error(errorText);
                         });
                     }
@@ -696,6 +847,7 @@
                             weeklyMaxTemps.push(data.daily.temperature_2m_max[i] !== null ? Math.round(data.daily.temperature_2m_max[i]) : null);
                             weeklyDates.push(data.daily.time[i]); 
                         }
+                        dataSourceInfo.textContent = "DATA RETRIEVAL: ACTIVE";
 
 
                         if (!displayToggleIntervalId) {
@@ -703,7 +855,7 @@
                             displayToggleIntervalId = setInterval(function() {
                                 displayState = (displayState + 1) % 3; 
                                 updateWeatherDisplay();
-                            }, 10000); 
+                            }, 5000); 
                         } else {
                             updateWeatherDisplay(); 
                         }
@@ -711,6 +863,7 @@
                         console.warn('APIデータ形式エラー:', JSON.stringify(data, null, 2));
                         todayWeatherData = null; tomorrowWeatherData = null; weeklyMaxTemps = []; weeklyDates = [];
                         displayState = 0; 
+                        dataSourceInfo.textContent = "気象データ形式エラー";
                         updateWeatherDisplay(); 
                         if (displayToggleIntervalId) { clearInterval(displayToggleIntervalId); displayToggleIntervalId = null; }
                     }
@@ -719,6 +872,7 @@
                     console.error('天気情報取得失敗:', error);
                     todayWeatherData = null; tomorrowWeatherData = null; weeklyMaxTemps = []; weeklyDates = [];
                     displayState = 0; 
+                    dataSourceInfo.textContent = "気象情報取得失敗";
                     updateWeatherDisplay(); 
                     if (displayToggleIntervalId) { clearInterval(displayToggleIntervalId); displayToggleIntervalId = null; }
                 });
@@ -733,7 +887,6 @@
 
         if (dateNewsToggleIntervalId) clearInterval(dateNewsToggleIntervalId);
         dateNewsToggleIntervalId = setInterval(function() { 
-            // ニュースの数 + 日付表示(1) で割った余りを計算
             var cycleLength = newsHeadlines.length > 0 ? newsHeadlines.length + 1 : 1;
             dateNewsDisplayState = (dateNewsDisplayState + 1) % cycleLength; 
             updateDateOrNewsDisplay();
