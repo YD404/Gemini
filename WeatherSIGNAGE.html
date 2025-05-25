@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>川崎市 時刻・天気</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.tailwindcss.com"></script> <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
 
         body {
             font-family: 'Noto Sans JP', sans-serif;
-            background-color: #111111; /* 暗い背景 */
+            background-color: #111111;
             margin: 0;
             padding: 0;
             display: flex;
@@ -19,48 +18,48 @@
             align-items: center;
             width: 100vw;
             height: 100vh;
-            overflow: hidden; /* スクロールバーを隠す */
+            overflow: hidden;
         }
 
         .signage-container {
             width: 100%;
             height: 100%;
-            background-color: #222222; /* 電子ペーパーの背景に近い暗い色 */
-            display: flex;
-            flex-direction: column;
+            background-color: #222222;
+            display: flex; 
+            flex-direction: column; 
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 20px rgba(255,255,255,0.1); /* 明るい影 */
-            border: 10px solid #555555; /* やや明るいグレーのフレーム */
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+            border: 10px solid #555555;
             box-sizing: border-box;
-            position: relative; /* アスペクト比維持のため */
-        }
-
-        /* 16:9 アスペクト比を維持するラッパー */
-        .aspect-ratio-wrapper {
-            width: 95vw; /* ビューポート幅の95% */
-            max-width: calc(95vh * 16 / 9); /* 高さを基準にした最大幅 (16:9) */
-            height: calc(95vw * 9 / 16); /* 幅を基準にした高さ (16:9) */
-            max-height: 95vh; /* ビューポート高さの95% */
             position: relative;
         }
 
+        .aspect-ratio-wrapper {
+            width: 95vw;
+            max-width: calc(95vh * 16 / 9); /* 16:9 横表示 */
+            height: calc(95vw * 9 / 16);   /* 16:9 横表示 */
+            max-height: 95vh;
+            position: relative;
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+        }
 
-        .content-grid {
-            display: grid;
-            grid-template-rows: auto 1fr; /* 上段(時刻)はコンテンツに合わせ、下段(天気)は残りのスペースを占有 */
+        .content-area { 
+            display: flex;
+            flex-direction: column; 
             width: 100%;
             height: 100%;
-            padding: 3vmin; /* 全体のパディングを少し調整 */
-            gap: 3vmin; /* 全体のギャップを少し調整 */
+            padding: 3vmin;
             box-sizing: border-box;
         }
 
-        .time-section, .weather-section {
-            background-color: #333333; /* やや明るいグレーのパネル背景 */
-            border: 2px solid #666666; /* 中間グレーのボーダー */
+        .time-section {
+            background-color: #333333;
+            border: 2px solid #666666;
             border-radius: 8px;
-            padding: 2vmin;
+            padding: 3vmin;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -68,33 +67,33 @@
             align-items: center;
             text-align: center;
             color: #dddddd;
-        }
-
-        .time-section {
-            grid-row: 1 / 2;
-            padding: 3vmin; /* 時刻セクションのパディング */
+            margin-bottom: 3vmin; 
         }
 
         .weather-section {
-            grid-row: 2 / 3;
-            display: grid;
-            /* grid-template-columns: 0.8fr 1.2fr; アイコン側を少し狭く、詳細側を少し広く */
-            /* 横表示ではアイコンと詳細を左右に均等に近づけるか、アイコンを少し小さめにする */
-            grid-template-columns: 0.7fr 1.3fr; /* アイコンを少し小さめに、詳細を広めに */
+            flex-grow: 1; 
+            background-color: #333333;
+            border: 2px solid #666666;
+            border-radius: 8px;
+            padding: 2vmin;
+            box-sizing: border-box;
+            display: flex; 
+            flex-direction: row; 
             align-items: center;
-            gap: 2vmin; /* アイコンと詳細の間のギャップ */
+            text-align: center;
+            color: #dddddd;
         }
 
         #time {
             font-family: 'Roboto Mono', monospace;
-            font-size: 15vmin; /* 横長画面に合わせて調整 */
+            font-size: 15vmin;
             font-weight: 700;
             line-height: 1;
             color: #eeeeee;
         }
 
         #date {
-            font-size: 5vmin; /* 横長画面に合わせて調整 */
+            font-size: 5vmin;
             margin-top: 1vmin;
             color: #cccccc;
         }
@@ -104,67 +103,111 @@
             justify-content: center;
             align-items: center;
             height: 100%;
+            flex: 0.7; 
         }
 
         #weather-icon {
             width: auto;
             height: auto;
-            max-width: 25vmin; /* アイコンコンテナの最大サイズ (横表示用) */
+            max-width: 25vmin; 
             max-height: 25vmin;
-            // background-color: #dddddd; /* アイコン背景 */
+            /* background-color: #dddddd; Dクラス職員によりコメントアウト */
             border-radius: 8px;
-            padding: 1.5vmin; /* アイコンと背景の間のパディング */
+            padding: 1.5vmin;
             display: flex;
             justify-content: center;
             align-items: center;
-            aspect-ratio: 1 / 1;
-            margin:0 -100px 0  0;
+            aspect-ratio: 1 / 1; 
+            margin: 0; 
         }
         #weather-icon .material-symbols-outlined {
-            font-size: 28vmin; /* アイコン自体のサイズ (横表示用) */
-            color: #ffffffff; /* アイコンの色 (背景が明るいため暗く) */
-            font-variation-settings:
-                'FILL' 0,
-                'wght' 300,
-                'GRAD' 0,
-                'opsz' 48;
+            font-size: 38vmin; /* Dクラス職員による設定値 */
+            color: #ffffffff; /* Dクラス職員による設定値 */
         }
 
-
         .weather-details {
-            font-size: 3.8vmin; /* 天気詳細の基準フォントサイズ */
+            flex: 1.3; 
+            font-size: 3.8vmin;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center; /* 詳細部分は中央揃え */
-            gap: 0.5vmin;
+            align-items: center;
             height: 100%;
             text-align: center;
-            width: 100%;
+            width: 100%; 
+            position: relative; 
+        }
+        .weather-details > div:not(#temp-graph-container) { 
+            margin-bottom: 0.5vmin;
+        }
+        .weather-details > div:last-child:not(#temp-graph-container) {
+            margin-bottom: 0;
         }
 
+
         #temperature {
-            font-size: 16vmin; /* 温度表示のサイズ (横表示用) */
+            font-size: 16vmin;
             font-weight: 700;
             color: #eeeeee;
             line-height: 1.1;
         }
         #weather-description {
-            font-size: 3.8vmin; /* 天気説明のサイズ */
+            font-size: 3.0vmin;
             color: #cccccc;
             line-height: 1.3;
             padding: 0 1vmin;
         }
         #city-name {
-            font-size: 3.3vmin; /* 都市名のサイズ */
+            font-size: 2.3vmin;
             color: #bbbbbb;
             margin-top: 0.5vmin;
         }
 
-        /* ローディング・エラーメッセージ */
         .message {
-            font-size: 3.5vmin; /* メッセージのフォントサイズ調整 */
+            font-size: 3.5vmin;
             color: #bbbbbb;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Graph specific styles */
+        #temp-graph-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; 
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            padding: 1vmin 0; 
+        }
+        .graph-title {
+            font-size: 3vmin;
+            color: #eeeeee;
+            margin-bottom: 0.5vmin; /* Reduced margin further */
+            text-align: center;
+        }
+        .svg-graph-wrapper { 
+            width: 98%; /* SVG takes most of the container width */
+            flex-grow: 1; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #temp-line-graph { 
+            /* width and height set by JS or 100% of wrapper */
+        }
+        .axis-label {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.8vmin; /* Adjusted for 7-day view */
+            fill: #cccccc;
+        }
+        .temp-value-label {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 2.0vmin; /* Adjusted for 7-day view */
+            fill: #dddddd;
         }
 
     </style>
@@ -172,13 +215,13 @@
 <body>
     <div class="aspect-ratio-wrapper">
         <div class="signage-container">
-            <div class="content-grid">
+            <div class="content-area">
                 <div class="time-section">
                     <div id="time" class="font-roboto-mono">--:--:--</div>
                     <div id="date" class="font-noto">----年--月--日 (-)</div>
                 </div>
                 <div class="weather-section">
-                    <div class="weather-icon-container">
+                    <div class="weather-icon-container"> 
                         <div id="weather-icon">
                             <span class="material-symbols-outlined">help</span>
                         </div>
@@ -187,6 +230,8 @@
                         <div id="temperature" class="font-roboto-mono">--°C</div>
                         <div id="weather-description" class="font-noto">読み込み中...</div>
                         <div id="city-name" class="font-noto">川崎市</div>
+                        <div id="temp-graph-container" class="hidden">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -194,232 +239,402 @@
     </div>
 
     <script>
-        // 川崎市の緯度経度 (例: 川崎市役所周辺)
-        const latitude = 35.5300;
-        const longitude = 139.7036;
+        var latitude = 35.5300;
+        var longitude = 139.7036;
 
-        const timeElement = document.getElementById('time');
-        const dateElement = document.getElementById('date');
-        const weatherIconElement = document.getElementById('weather-icon'); // div containing the span
-        const temperatureElement = document.getElementById('temperature');
-        const weatherDescriptionElement = document.getElementById('weather-description');
-        const cityNameElement = document.getElementById('city-name');
+        var timeElement = document.getElementById('time');
+        var dateElement = document.getElementById('date');
+        var weatherIconContainerElement = document.querySelector('.weather-icon-container');
+        var weatherIconElement = document.getElementById('weather-icon');
+        var temperatureElement = document.getElementById('temperature');
+        var weatherDescriptionElement = document.getElementById('weather-description');
+        var cityNameElement = document.getElementById('city-name');
+        var tempGraphContainerElement = document.getElementById('temp-graph-container');
 
-        let todayWeatherData = null;
-        let tomorrowWeatherData = null;
-        let isDisplayingToday = true; // 最初は今日の天気を表示
-        let weatherIntervalId = null; // 天気情報更新用インターバルID
-        let displayToggleIntervalId = null; // 表示切替用インターバルID
+        var todayWeatherData = null;
+        var tomorrowWeatherData = null;
+        var weeklyMaxTemps = []; // Array to store 7-day max temperatures
+        var weeklyDates = []; // Array to store dates for the 7-day forecast
+
+        var displayState = 0; // 0: Today, 1: Tomorrow, 2: Graph
+        var weatherIntervalId = null;
+        var displayToggleIntervalId = null;
+
+        function customPadStart(str, targetLength, padString) {
+            str = String(str);
+            targetLength = targetLength >> 0; 
+            padString = String((typeof padString !== 'undefined' ? padString : ' '));
+            if (str.length > targetLength) {
+                return String(str);
+            } else {
+                targetLength = targetLength - str.length;
+                if (targetLength > padString.length) {
+                    padString += padString.repeat(targetLength / padString.length); 
+                }
+                return padString.slice(0, targetLength) + String(str);
+            }
+        }
 
         function updateTime() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            timeElement.textContent = `${hours}:${minutes}:${seconds}`;
+            var now = new Date();
+            var hours = customPadStart(now.getHours(), 2, '0');
+            var minutes = customPadStart(now.getMinutes(), 2, '0');
+            var seconds = customPadStart(now.getSeconds(), 2, '0');
+            timeElement.textContent = hours + ":" + minutes + ":" + seconds;
 
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
-            dateElement.textContent = `${year}年${month}月${day}日 (${dayOfWeek})`;
+            var year = now.getFullYear();
+            var month = customPadStart(now.getMonth() + 1, 2, '0');
+            var day = customPadStart(now.getDate(), 2, '0');
+            var dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+            dateElement.textContent = year + "年" + month + "月" + day + "日 (" + dayOfWeek + ")";
         }
 
-        // WMO天候コードから日本語の説明とMaterial Symbolアイコン名を取得
         function getWeatherInfoFromWMOCode(code) {
-            const wmoMap = {
-                0: { description: "快晴", icon: "sunny" },
-                1: { description: "ほぼ快晴", icon: "partly_cloudy_day" },
-                2: { description: "所により曇り", icon: "partly_cloudy_day" },
-                3: { description: "曇り", icon: "cloud" },
-                45: { description: "霧", icon: "foggy" },
-                48: { description: "霧氷", icon: "ac_unit" },
-                51: { description: "霧雨 (弱)", icon: "rainy_light" },
-                53: { description: "霧雨", icon: "rainy_light" },
-                55: { description: "霧雨 (強)", icon: "rainy_light" },
-                56: { description: "着氷性の霧雨", icon: "sleet" },
-                57: { description: "着氷性の霧雨", icon: "sleet" },
-                61: { description: "雨 (弱)", icon: "rainy" },
-                63: { description: "雨", icon: "rainy" },
-                65: { description: "雨 (強)", icon: "rainy_heavy" },
-                66: { description: "着氷性の雨", icon: "sleet" },
-                67: { description: "着氷性の雨", icon: "sleet" },
-                71: { description: "雪 (弱)", icon: "weather_snowy" },
-                73: { description: "雪", icon: "weather_snowy" },
-                75: { description: "雪 (強)", icon: "weather_snowy" },
-                77: { description: "霧雪", icon: "grain" },
-                80: { description: "にわか雨 (弱)", icon: "rainy_light" },
-                81: { description: "にわか雨", icon: "rainy" },
-                82: { description: "にわか雨 (強)", icon: "thunderstorm" },
-                85: { description: "にわか雪 (弱)", icon: "weather_snowy" },
-                86: { description: "にわか雪 (強)", icon: "weather_snowy" },
-                95: { description: "雷雨", icon: "thunderstorm" },
-                96: { description: "雷雨 (雹)", icon: "thunderstorm" },
-                99: { description: "雷雨 (雹)", icon: "thunderstorm" },
+            var wmoMap = {
+                0: { description: "快晴", icon: "sunny" }, 1: { description: "ほぼ快晴", icon: "partly_cloudy_day" },
+                2: { description: "所により曇り", icon: "partly_cloudy_day" }, 3: { description: "曇り", icon: "cloud" },
+                45: { description: "霧", icon: "foggy" }, 48: { description: "霧氷", icon: "ac_unit" },
+                51: { description: "霧雨 (弱)", icon: "rainy_light" }, 53: { description: "霧雨", icon: "rainy_light" },
+                55: { description: "霧雨 (強)", icon: "rainy_light" }, 56: { description: "着氷性の霧雨", icon: "sleet" },
+                57: { description: "着氷性の霧雨", icon: "sleet" }, 61: { description: "雨 (弱)", icon: "rainy" },
+                63: { description: "雨", icon: "rainy" }, 65: { description: "雨 (強)", icon: "rainy_heavy" },
+                66: { description: "着氷性の雨", icon: "sleet" }, 67: { description: "着氷性の雨", icon: "sleet" },
+                71: { description: "雪 (弱)", icon: "weather_snowy" }, 73: { description: "雪", icon: "weather_snowy" },
+                75: { description: "雪 (強)", icon: "weather_snowy" }, 77: { description: "霧雪", icon: "grain" },
+                80: { description: "にわか雨 (弱)", icon: "rainy_light" }, 81: { description: "にわか雨", icon: "rainy" },
+                82: { description: "にわか雨 (強)", icon: "thunderstorm" }, 85: { description: "にわか雪 (弱)", icon: "weather_snowy" },
+                86: { description: "にわか雪 (強)", icon: "weather_snowy" }, 95: { description: "雷雨", icon: "thunderstorm" },
+                96: { description: "雷雨 (雹)", icon: "thunderstorm" }, 99: { description: "雷雨 (雹)", icon: "thunderstorm" },
             };
-            return wmoMap[code] || { description: `コード:${code}`, icon: "help" };
+            return wmoMap[code] || { description: "コード:" + code, icon: "help" };
         }
+
+        function renderTemperatureLineGraph(temps, dates) {
+            tempGraphContainerElement.innerHTML = ''; 
+
+            if (!temps || temps.length === 0) {
+                tempGraphContainerElement.innerHTML = '<div class="message" style="text-align:center; width:100%;">比較できる気温データがありません</div>';
+                return;
+            }
+            
+            var graphTitle = document.createElement('div');
+            graphTitle.className = 'graph-title';
+            graphTitle.textContent = '週間最高気温';
+            tempGraphContainerElement.appendChild(graphTitle);
+
+            var svgWrapper = document.createElement('div');
+            svgWrapper.className = 'svg-graph-wrapper';
+            tempGraphContainerElement.appendChild(svgWrapper);
+
+            var svgNS = "http://www.w3.org/2000/svg";
+            var svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute("id", "temp-line-graph");
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            svgWrapper.appendChild(svg);
+            
+            var svgWidth = svgWrapper.offsetWidth || 200; 
+            var svgHeight = svgWrapper.offsetHeight || 100; 
+
+            var margin = { top: 20, right: 20, bottom: 45, left: 35 }; // Adjusted margins for 7 days
+            var graphWidth = svgWidth - margin.left - margin.right;
+            var graphHeight = svgHeight - margin.top - margin.bottom;
+
+            if (graphWidth <=0 || graphHeight <=0) {
+                graphWidth = Math.max(100, svgWidth * 0.7);
+                graphHeight = Math.max(50, svgHeight * 0.6);
+            }
+            
+            svg.setAttribute("viewBox", "0 0 " + svgWidth + " " + svgHeight);
+
+            var g = document.createElementNS(svgNS, "g");
+            g.setAttribute("transform", "translate(" + margin.left + "," + margin.top + ")");
+            svg.appendChild(g);
+
+            var dataPoints = [];
+            for (var i = 0; i < temps.length; i++) {
+                if (temps[i] !== null) {
+                    var label = "";
+                    if (i === 0) label = "今日";
+                    else if (i === 1) label = "明日";
+                    else {
+                        var dateObj = new Date(dates[i]);
+                        label = (dateObj.getMonth() + 1) + "/" + dateObj.getDate();
+                    }
+                    dataPoints.push({ label: label, temp: temps[i], dayIndex: i });
+                }
+            }
+            
+            if (dataPoints.length === 0) { 
+                svgWrapper.innerHTML = '<div class="message">データなし</div>';
+                return;
+            }
+
+            var yMin = Infinity, yMax = -Infinity;
+            dataPoints.forEach(function(p){
+                yMin = Math.min(yMin, p.temp);
+                yMax = Math.max(yMax, p.temp);
+            });
+            if (yMin === Infinity) { yMin = 0; yMax = 30;} 
+            
+            var yPadding = (yMax - yMin) * 0.15 || 5; 
+            yMin = Math.floor(yMin - yPadding);
+            yMax = Math.ceil(yMax + yPadding);
+            if (yMin === yMax) { yMin -= 5; yMax += 5; }
+
+            function scaleY(temp) {
+                if (yMax === yMin) return graphHeight / 2;
+                return graphHeight - ((temp - yMin) / (yMax - yMin)) * graphHeight;
+            }
+            function scaleX(dayIndex) {
+                if (temps.length <= 1) return graphWidth / 2; // Single point
+                return (graphWidth / (temps.length -1 )) * dayIndex;
+            }
+
+
+            // Draw Y-axis
+            var yAxisLine = document.createElementNS(svgNS, "line");
+            yAxisLine.setAttribute("x1", "0"); yAxisLine.setAttribute("y1", "0");
+            yAxisLine.setAttribute("x2", "0"); yAxisLine.setAttribute("y2", graphHeight);
+            yAxisLine.setAttribute("stroke", "#777"); yAxisLine.setAttribute("stroke-width", "1");
+            g.appendChild(yAxisLine);
+
+            var numYTicks = 3; // Example: Min, Mid, Max
+            for (var i = 0; i <= numYTicks; i++) {
+                var val = yMin + (i/numYTicks) * (yMax - yMin);
+                if (i === numYTicks/2 && numYTicks % 2 === 0 && numYTicks > 1) continue; // Avoid mid-point if even ticks
+                var yLabel = document.createElementNS(svgNS, "text");
+                yLabel.setAttribute("class", "axis-label");
+                yLabel.setAttribute("x", -5);
+                yLabel.setAttribute("y", scaleY(val));
+                yLabel.setAttribute("dy", "0.35em");
+                yLabel.setAttribute("text-anchor", "end");
+                yLabel.textContent = Math.round(val) + "°";
+                g.appendChild(yLabel);
+            }
+            
+            // Draw X-axis
+            var xAxisLine = document.createElementNS(svgNS, "line");
+            xAxisLine.setAttribute("x1", "0"); xAxisLine.setAttribute("y1", graphHeight);
+            xAxisLine.setAttribute("x2", graphWidth); xAxisLine.setAttribute("y2", graphHeight);
+            xAxisLine.setAttribute("stroke", "#777"); xAxisLine.setAttribute("stroke-width", "1");
+            g.appendChild(xAxisLine);
+
+            var linePath = "";
+            dataPoints.forEach(function(p, i) {
+                var xPos = scaleX(p.dayIndex);
+                var yPos = scaleY(p.temp);
+                if (i === 0) {
+                    linePath += "M" + xPos + "," + yPos;
+                } else {
+                    linePath += " L" + xPos + "," + yPos;
+                }
+            });
+
+            if (linePath !== "") {
+                var line = document.createElementNS(svgNS, "path");
+                line.setAttribute("d", linePath);
+                line.setAttribute("fill", "none");
+                line.setAttribute("stroke", "#eeeeee");
+                line.setAttribute("stroke-width", "3.5"); // Increased line thickness
+                line.setAttribute("stroke-linecap", "round");
+                line.setAttribute("stroke-linejoin", "round");
+                g.appendChild(line);
+            }
+            
+            dataPoints.forEach(function(p) {
+                var xPos = scaleX(p.dayIndex);
+                var yPos = scaleY(p.temp);
+                var circle = document.createElementNS(svgNS, "circle");
+                circle.setAttribute("cx", xPos);
+                circle.setAttribute("cy", yPos);
+                circle.setAttribute("r", "3.5"); // Slightly smaller circles for more points
+                circle.setAttribute("fill", "#eeeeee");
+                circle.setAttribute("stroke", "#333333");
+                circle.setAttribute("stroke-width", "1.5");
+                g.appendChild(circle);
+
+                var tempValLabel = document.createElementNS(svgNS, "text");
+                tempValLabel.setAttribute("class", "temp-value-label");
+                tempValLabel.setAttribute("x", xPos);
+                tempValLabel.setAttribute("y", yPos - 8); // Adjusted label position
+                tempValLabel.setAttribute("text-anchor", "middle");
+                tempValLabel.textContent = p.temp + "°";
+                g.appendChild(tempValLabel);
+
+                var xLabel = document.createElementNS(svgNS, "text");
+                xLabel.setAttribute("class", "axis-label");
+                xLabel.setAttribute("x", xPos);
+                xLabel.setAttribute("y", graphHeight + 18); // Adjusted label position
+                xLabel.setAttribute("text-anchor", "middle");
+                xLabel.textContent = p.label;
+                g.appendChild(xLabel);
+            });
+        }
+
 
         function updateWeatherDisplay() {
-            let displayData;
-            let dayLabel = "";
-            let tempString = "--°C";
-            let descriptionText = "情報なし";
-            let iconName = "help";
+            temperatureElement.classList.add('hidden');
+            weatherDescriptionElement.classList.add('hidden');
+            cityNameElement.classList.add('hidden');
+            tempGraphContainerElement.classList.add('hidden');
+            weatherIconContainerElement.classList.add('hidden'); 
 
-            if (isDisplayingToday && todayWeatherData) {
-                displayData = todayWeatherData;
-                dayLabel = "今日";
-                tempString = `${displayData.temperature}°C`; // 現在の気温
-                const weatherInfo = getWeatherInfoFromWMOCode(displayData.weathercode);
-                iconName = weatherInfo.icon;
-                descriptionText = `${dayLabel}: ${weatherInfo.description}`;
-                if (displayData.max_temp !== null && displayData.min_temp !== null) {
-                    descriptionText += ` (最高 ${displayData.max_temp}°C / 最低 ${displayData.min_temp}°C)`;
+            if (displayState === 0 && todayWeatherData) { 
+                weatherIconContainerElement.classList.remove('hidden');
+                temperatureElement.classList.remove('hidden');
+                weatherDescriptionElement.classList.remove('hidden');
+                cityNameElement.classList.remove('hidden');
+
+                var weatherInfo = getWeatherInfoFromWMOCode(todayWeatherData.weathercode);
+                weatherIconElement.innerHTML = '<span class="material-symbols-outlined">' + weatherInfo.icon + '</span>';
+                temperatureElement.textContent = todayWeatherData.temperature + "°C";
+                var desc = "今日: " + weatherInfo.description;
+                if (todayWeatherData.max_temp !== null && todayWeatherData.min_temp !== null) {
+                    desc += " (最高 " + todayWeatherData.max_temp + "°C / 最低 " + todayWeatherData.min_temp + "°C)";
                 }
+                weatherDescriptionElement.textContent = desc;
+                weatherDescriptionElement.classList.remove('message');
 
+            } else if (displayState === 1 && tomorrowWeatherData) { 
+                weatherIconContainerElement.classList.remove('hidden');
+                temperatureElement.classList.remove('hidden');
+                weatherDescriptionElement.classList.remove('hidden');
+                cityNameElement.classList.remove('hidden');
 
-            } else if (!isDisplayingToday && tomorrowWeatherData) {
-                displayData = tomorrowWeatherData;
-                dayLabel = "明日";
-                tempString = displayData.max_temp !== null ? `${displayData.max_temp}°C` : '--°C'; // 明日は最高気温をメイン表示
-                const weatherInfo = getWeatherInfoFromWMOCode(displayData.weathercode);
-                iconName = weatherInfo.icon;
-                descriptionText = `${dayLabel}: ${weatherInfo.description}`;
-                if (displayData.max_temp !== null && displayData.min_temp !== null) {
-                    descriptionText += ` (最高 ${displayData.max_temp}°C / 最低 ${displayData.min_temp}°C)`;
+                var weatherInfo = getWeatherInfoFromWMOCode(tomorrowWeatherData.weathercode);
+                weatherIconElement.innerHTML = '<span class="material-symbols-outlined">' + weatherInfo.icon + '</span>';
+                temperatureElement.textContent = tomorrowWeatherData.max_temp !== null ? tomorrowWeatherData.max_temp + "°C" : '--°C';
+                var desc = "明日: " + weatherInfo.description;
+                if (tomorrowWeatherData.max_temp !== null && tomorrowWeatherData.min_temp !== null) {
+                    desc += " (最高 " + tomorrowWeatherData.max_temp + "°C / 最低 " + tomorrowWeatherData.min_temp + "°C)";
                 }
+                weatherDescriptionElement.textContent = desc;
+                weatherDescriptionElement.classList.remove('message');
 
-            } else {
-                // データがない場合
-                descriptionText = "読込中..."; // 初期メッセージ
-                weatherDescriptionElement.classList.add('message');
-            }
+            } else if (displayState === 2) { 
+                tempGraphContainerElement.classList.remove('hidden');
+                document.querySelector('.weather-details').style.flex = '2'; 
+                weatherIconContainerElement.classList.add('hidden'); 
 
-            weatherIconElement.innerHTML = `<span class="material-symbols-outlined">${iconName}</span>`;
-            temperatureElement.textContent = tempString;
-            weatherDescriptionElement.textContent = descriptionText;
-
-            if (descriptionText !== "情報なし" && descriptionText !== "読込中..." && !descriptionText.startsWith("APIエラー") && !descriptionText.startsWith("天気情報取得エラー") && !descriptionText.startsWith("天気データ形式エラー")) {
-                 weatherDescriptionElement.classList.remove('message');
-            } else {
-                 weatherDescriptionElement.classList.add('message');
-            }
-            cityNameElement.textContent = '川崎市';
-        }
-
-        async function fetchWeather() {
-            // Open-Meteo API: 現在の天気と2日間の日次予報を取得
-            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia/Tokyo&forecast_days=2`;
-
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    let errorText = `APIエラー: ${response.status} ${response.statusText}`;
-                    try {
-                        const errorData = await response.json();
-                        if (errorData && errorData.reason) {
-                           errorText = `APIエラー: ${errorData.reason}`;
-                        }
-                    } catch (e) { /* JSONパース失敗 */ }
-                    throw new Error(errorText);
-                }
-                const data = await response.json();
-
-                if (data && data.current_weather && data.daily && data.daily.time && data.daily.time.length >= 2) {
-                    // 今日の天気データ
-                    todayWeatherData = {
-                        temperature: Math.round(data.current_weather.temperature),
-                        weathercode: data.current_weather.weathercode,
-                        max_temp: data.daily.temperature_2m_max[0] !== null ? Math.round(data.daily.temperature_2m_max[0]) : null,
-                        min_temp: data.daily.temperature_2m_min[0] !== null ? Math.round(data.daily.temperature_2m_min[0]) : null,
-                    };
-
-                    // 明日の天気データ
-                    tomorrowWeatherData = {
-                        weathercode: data.daily.weathercode[1],
-                        max_temp: data.daily.temperature_2m_max[1] !== null ? Math.round(data.daily.temperature_2m_max[1]) : null,
-                        min_temp: data.daily.temperature_2m_min[1] !== null ? Math.round(data.daily.temperature_2m_min[1]) : null,
-                    };
-
-                    // 初回表示更新
-                    if (!displayToggleIntervalId) { // タイマーがまだ開始されていなければ
-                        updateWeatherDisplay(); // 先に一度表示を更新
-                        displayToggleIntervalId = setInterval(() => {
-                            isDisplayingToday = !isDisplayingToday;
-                            updateWeatherDisplay();
-                        }, 10000); // 10秒ごとに切り替え
-                    } else {
-                        // タイマーが既に動いている場合は、現在の表示を更新するだけで良い
-                        updateWeatherDisplay();
-                    }
-                    weatherDescriptionElement.classList.remove('message');
-
-
+                if (weeklyMaxTemps.length > 0 && weeklyDates.length > 0) {
+                    setTimeout(function() {
+                        renderTemperatureLineGraph(weeklyMaxTemps, weeklyDates);
+                    }, 0);
                 } else {
-                    console.warn('APIは200 OKを返しましたが、期待する天気データ形式ではありませんでした。レスポンス:', JSON.stringify(data, null, 2));
-                    todayWeatherData = null;
-                    tomorrowWeatherData = null;
-                    weatherDescriptionElement.textContent = '天気データ形式エラー';
-                    weatherDescriptionElement.classList.add('message');
-                    temperatureElement.textContent = '--°C';
-                    weatherIconElement.innerHTML = `<span class="material-symbols-outlined">warning</span>`;
-                     if (displayToggleIntervalId) {
-                        clearInterval(displayToggleIntervalId);
-                        displayToggleIntervalId = null; // データ不備ならタイマーも止める
-                     }
+                    tempGraphContainerElement.innerHTML = '<div class="message" style="text-align:center; width:100%;">週間気温データ取得中...</div>';
                 }
+                 weatherDescriptionElement.classList.add('message'); 
+                 weatherDescriptionElement.textContent = ''; 
 
-            } catch (error) {
-                console.error('天気情報の取得に失敗しました:', error);
-                todayWeatherData = null;
-                tomorrowWeatherData = null;
-                weatherDescriptionElement.textContent = error.message && error.message.includes('APIエラー') ? error.message : '天気情報取得エラー';
-                weatherDescriptionElement.classList.add('message');
+            } else { 
+                weatherIconContainerElement.classList.remove('hidden'); 
+                weatherIconElement.innerHTML = '<span class="material-symbols-outlined">help</span>';
                 temperatureElement.textContent = '--°C';
-                weatherIconElement.innerHTML = `<span class="material-symbols-outlined">error</span>`;
-                if (displayToggleIntervalId) {
-                    clearInterval(displayToggleIntervalId);
-                    displayToggleIntervalId = null; // エラーならタイマーも止める
-                }
+                temperatureElement.classList.remove('hidden');
+                weatherDescriptionElement.textContent = "読込中...";
+                weatherDescriptionElement.classList.add('message');
+                weatherDescriptionElement.classList.remove('hidden');
+                cityNameElement.classList.remove('hidden');
             }
+            if (displayState !== 2) { 
+                 document.querySelector('.weather-details').style.flex = '1.3';
+            }
+            cityNameElement.textContent = '川崎市'; 
         }
 
-        // 初期表示
-        updateTime();
-        fetchWeather(); // 初回天気情報取得
 
-        // 1秒ごとに時刻を更新
+        function fetchWeather() {
+            // Fetch 7 days of daily forecast
+            var apiUrl = "https://api.open-meteo.com/v1/forecast?latitude=" + latitude + "&longitude=" + longitude + "&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia/Tokyo&forecast_days=7";
+
+            fetch(apiUrl)
+                .then(function(response) {
+                    if (!response.ok) {
+                        var errorText = "APIエラー: " + response.status + " " + response.statusText;
+                        return response.text().then(function(text) {
+                            try { var errorData = JSON.parse(text); if (errorData && errorData.reason) { errorText = "APIエラー: " + errorData.reason; }} catch (e) {}
+                            throw new Error(errorText);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data && data.current_weather && data.daily && data.daily.time && data.daily.time.length >= 7) {
+                        todayWeatherData = {
+                            temperature: Math.round(data.current_weather.temperature),
+                            weathercode: data.current_weather.weathercode,
+                            max_temp: data.daily.temperature_2m_max[0] !== null ? Math.round(data.daily.temperature_2m_max[0]) : null,
+                            min_temp: data.daily.temperature_2m_min[0] !== null ? Math.round(data.daily.temperature_2m_min[0]) : null,
+                        };
+                        tomorrowWeatherData = {
+                            weathercode: data.daily.weathercode[1],
+                            max_temp: data.daily.temperature_2m_max[1] !== null ? Math.round(data.daily.temperature_2m_max[1]) : null,
+                            min_temp: data.daily.temperature_2m_min[1] !== null ? Math.round(data.daily.temperature_2m_min[1]) : null,
+                        };
+                        
+                        weeklyMaxTemps = [];
+                        weeklyDates = [];
+                        for (var i = 0; i < 7; i++) {
+                            weeklyMaxTemps.push(data.daily.temperature_2m_max[i] !== null ? Math.round(data.daily.temperature_2m_max[i]) : null);
+                            weeklyDates.push(data.daily.time[i]); // Store date strings
+                        }
+
+
+                        if (!displayToggleIntervalId) {
+                            updateWeatherDisplay(); 
+                            displayToggleIntervalId = setInterval(function() {
+                                displayState = (displayState + 1) % 3; 
+                                updateWeatherDisplay();
+                            }, 10000);
+                        } else {
+                            updateWeatherDisplay(); 
+                        }
+                    } else {
+                        console.warn('APIデータ形式エラー:', JSON.stringify(data, null, 2));
+                        todayWeatherData = null; tomorrowWeatherData = null; weeklyMaxTemps = []; weeklyDates = [];
+                        displayState = 0; 
+                        updateWeatherDisplay(); 
+                        if (displayToggleIntervalId) { clearInterval(displayToggleIntervalId); displayToggleIntervalId = null; }
+                    }
+                })
+                .catch(function(error) {
+                    console.error('天気情報取得失敗:', error);
+                    todayWeatherData = null; tomorrowWeatherData = null; weeklyMaxTemps = []; weeklyDates = [];
+                    displayState = 0; 
+                    updateWeatherDisplay(); 
+                    if (displayToggleIntervalId) { clearInterval(displayToggleIntervalId); displayToggleIntervalId = null; }
+                });
+        }
+
+        updateTime();
+        fetchWeather();
+
         setInterval(updateTime, 1000);
-        // 15分ごとに天気情報を再取得
         if (weatherIntervalId) clearInterval(weatherIntervalId);
         weatherIntervalId = setInterval(fetchWeather, 15 * 60 * 1000);
 
-
-        // ウィンドウリサイズ時にアスペクト比を再計算
         function maintainAspectRatio() {
-            const wrapper = document.querySelector('.aspect-ratio-wrapper');
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
+            var wrapper = document.querySelector('.aspect-ratio-wrapper');
+            var viewportWidth = window.innerWidth;
+            var viewportHeight = window.innerHeight;
+            var newWidth, newHeight;
+            var targetWidth = viewportWidth * 0.95;
+            var targetHeight = viewportHeight * 0.95;
 
-            let newWidth, newHeight;
-            const targetWidth = viewportWidth * 0.95;
-            const targetHeight = viewportHeight * 0.95;
-
-            // 16:9 アスペクト比をターゲット
-            if (targetWidth / targetHeight > 16 / 9) { // ビューポートがターゲットより横長の場合 (高さ基準)
+            if (targetWidth / targetHeight > 16 / 9) {
                 newHeight = targetHeight;
                 newWidth = newHeight * 16 / 9;
-            } else { // ビューポートがターゲットより縦長または等しい場合 (幅基準)
+            } else {
                 newWidth = targetWidth;
                 newHeight = newWidth * 9 / 16;
             }
-            wrapper.style.width = `${newWidth}px`;
-            wrapper.style.height = `${newHeight}px`;
+            wrapper.style.width = newWidth + "px";
+            wrapper.style.height = newHeight + "px";
         }
 
-        window.addEventListener('resize', maintainAspectRatio);
-        maintainAspectRatio(); // 初期ロード時にも実行
+        window.onresize = maintainAspectRatio;
+        maintainAspectRatio();
     </script>
 </body>
 </html>
