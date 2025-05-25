@@ -20,7 +20,7 @@
             --font-primary: 'Noto Sans JP', sans-serif;
             --font-mono: 'Roboto Mono', monospace;
             --font-display: 'Orbitron', sans-serif;
-            /* --animation-duration: 0.4s; */ /* アニメーションは削除 */
+            --animation-duration: 0.4s; 
         }
 
         body {
@@ -133,7 +133,7 @@
 
         #time {
             font-family: var(--font-mono);
-            font-size: 14vmin; /* ユーザー設定を維持 */
+            font-size: 14vmin; 
             font-weight: 500;
             line-height: 1;
             color: var(--text-color-accent);
@@ -149,6 +149,8 @@
             min-height: auto; 
             width: 100%; 
             height: 7vh; 
+            transition: opacity var(--animation-duration) ease-in-out;
+            opacity: 1;
         }
         
         #date { 
@@ -156,15 +158,14 @@
             color: var(--text-color-secondary);
             padding: 0 0.5vmin; 
             line-height: 1.2; 
-            font-weight: 800; /* ユーザー設定を維持 */
-            /* font-size はJSで設定 */
+            font-weight: 800; 
             width: 100%; 
             overflow: hidden; 
             text-overflow: ellipsis;
         }
         #attribution-text { 
             font-family: var(--font-mono);
-            font-size: 1.5vmin; /* ユーザー設定を維持 */
+            font-size: 1.5vmin; 
             color: #666; 
             margin-top: 0.5vmin;
             letter-spacing: 0.05em;
@@ -178,6 +179,8 @@
             flex: 0.4; 
             border-right: 1px solid var(--line-color); 
             padding-right: 1.5vmin;
+            transition: opacity var(--animation-duration) ease-in-out; /* フェードアニメーション */
+            opacity: 1; /* 初期状態 */
         }
         
         #weather-icon {
@@ -193,8 +196,8 @@
             margin: 0; 
         }
         #weather-icon .material-symbols-outlined {
-            font-size: 40vmin; /* ユーザー設定を維持 */
-            color: #ffffffff; /* ユーザー設定を維持 */
+            font-size: 40vmin; 
+            color: #ffffffff; 
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 48; 
         }
 
@@ -207,6 +210,8 @@
             padding-left: 1.5vmin;
             width: 100%; 
             height: 100%; 
+            transition: opacity var(--animation-duration) ease-in-out; /* フェードアニメーション */
+            opacity: 1; /* 初期状態 */
         }
         
         #weather-info-display, #graph-display-wrapper, #rss-feed-display { 
@@ -224,15 +229,15 @@
         }
         .rss-title {
             font-family: var(--font-primary);
-            font-size: 6.0vmin; /* ユーザー設定を維持 */
-            font-weight: 500; /* ユーザー設定を維持 */
+            font-size: 6.0vmin;
+            font-weight: 500;
             color: var(--text-color-primary);
             margin-bottom: 1vmin;
             width: 100%;
         }
         .rss-description {
             font-family: var(--font-primary);
-            font-size: 3.0vmin; /* ユーザー設定を維持 */
+            font-size: 3.0vmin;
             color: var(--text-color-secondary);
             line-height: 1.4;
             width: 100%;
@@ -242,7 +247,7 @@
         }
         .rss-author {
             font-family: var(--font-mono);
-            font-size: 2.5vmin; /* ユーザー設定を維持 */
+            font-size: 2.0vmin;
             color: #888;
             margin-top: 0.5vmin;
             width: 100%;
@@ -252,8 +257,8 @@
 
         #temperature {
             font-family: var(--font-mono);
-            font-size: 25vmin; /* ユーザー設定を維持 */
-            font-weight: 500; /* ユーザー設定を維持 */
+            font-size: 25vmin; 
+            font-weight: 500; 
             color: var(--text-color-accent);
             line-height: 1;
             text-align: center; 
@@ -261,17 +266,17 @@
         }
         #weather-description {
             font-family: var(--font-primary);
-            font-size: 4.0vmin; /* ユーザー設定を維持 */
+            font-size: 4.0vmin; 
             color: var(--text-color-secondary);
             line-height: 1.2;
             padding: 0 0.5vmin;
-            font-weight: 300; /* ユーザー設定を維持 */
+            font-weight: 300; 
             text-align: center;
             width: 100%;
         }
         #city-name {
             font-family: var(--font-mono);
-            font-size: 2.0vmin; /* ユーザー設定を維持 */
+            font-size: 2.0vmin; 
             color: #777; 
             margin-top: 0.2vmin;
             text-transform: uppercase; 
@@ -302,11 +307,11 @@
         }
         .graph-title {
             font-family: var(--font-mono);
-            font-size: 2.0vmin; /* ユーザー設定を維持 */
+            font-size: 2.0vmin; 
             color: var(--text-color-primary);
             margin-bottom: 0.5vmin; 
             text-align: center;
-            font-weight: 400; /* ユーザー設定を維持 */
+            font-weight: 400; 
             flex-shrink: 0; 
         }
         .svg-graph-wrapper { 
@@ -321,15 +326,15 @@
         }
         .axis-label {
             font-family: var(--font-mono);
-            font-size: 1.5vmin; /* ユーザー設定を維持 */
+            font-size: 1.5vmin; 
             fill: var(--text-color-secondary);
-            font-weight: 300; /* ユーザー設定を維持 */
+            font-weight: 300; 
         }
         .temp-value-label {
             font-family: var(--font-mono);
-            font-size: 4.0vmin; /* ユーザー設定を維持 */
+            font-size: 4.0vmin; 
             fill: var(--text-color-primary);
-            font-weight: 600; /* ユーザー設定を維持 */
+            font-weight: 600; 
         }
         #temp-line-graph .graph-line {
             stroke: var(--text-color-primary);
@@ -417,7 +422,7 @@
         ];
         var MAX_WEATHER_DISPLAY_STATES = 5; 
 
-        // var animationDuration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration') || '0.4') * 1000; // アニメーション簡略化
+        var animationDuration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration') || '0.4') * 1000;
 
 
         function customPadStart(str, targetLength, padString) {
@@ -435,19 +440,23 @@
             }
         }
         
-        // アニメーション関数は呼び出し側で制御するため、ここでは定義のみ
-        // function animateElementSwitch(element, newContentCallback) {
-        //     if (!element) { newContentCallback(); return; } // 要素がなければ即時実行
-        //     element.style.opacity = 0; 
-        //     setTimeout(function() {
-        //         newContentCallback(); 
-        //         if (element) element.style.opacity = 1; 
-        //     }, animationDuration > 0 ? animationDuration / 2 : 0); 
-        // }
+        function animateElementSwitch(element, newContentCallback) {
+            if (!element) { 
+                newContentCallback();
+                return;
+            }
+            element.style.opacity = 0; 
+            setTimeout(function() {
+                newContentCallback(); 
+                if (element) { 
+                    element.style.opacity = 1; 
+                }
+            }, animationDuration > 0 ? animationDuration / 2 : 0); 
+        }
 
 
         function updateDateOrNewsDisplay() {
-            // animateElementSwitch(dateContainerElement, function() { // アニメーション一旦停止
+            animateElementSwitch(dateContainerElement, function() {
                 if (!dateContainerElement) return;
                 dateContainerElement.innerHTML = ''; 
 
@@ -509,7 +518,7 @@
                     dateContainerElement.appendChild(attributionTextDiv);
                     dateNewsDisplayState = 0; 
                 }
-            // });
+            });
         }
 
 
@@ -646,11 +655,9 @@
                             description = plainText.trim().substring(0, 100) + (plainText.length > 100 ? "..." : ""); 
                         }
                         currentRssItem = { title: title, description: description, author: channelTitle };
-                        if(dataSourceInfo) dataSourceInfo.textContent = "DATA RETRIEVAL: ACTIVE";
                     } else {
                         console.warn("RSSアイテムが見つかりませんでした ("+rssUrl+").");
                         currentRssItem = { title: "記事なし", description: "このフィードには記事がありません。", author: channelTitle };
-                        if(dataSourceInfo) dataSourceInfo.textContent = "RSS記事なし";
                     }
                     if (displayState === 3 || displayState === 4) { 
                         updateWeatherDisplay();
@@ -659,7 +666,6 @@
                 .catch(function(error) {
                     console.error("ランダムRSS取得最終エラー ("+rssUrl+"): ", error);
                     currentRssItem = { title: "RSS取得失敗", description: "読み込みに問題がありました。", author: "N/A" };
-                    if(dataSourceInfo) dataSourceInfo.textContent = "RSS取得失敗";
                     if (displayState === 3 || displayState === 4) updateWeatherDisplay();
                 });
         }
@@ -873,7 +879,7 @@
         }
 
         function updateWeatherDisplay() {
-            // animateElementSwitch(weatherDetailsElement, function() { // アニメーション一旦停止
+            animateElementSwitch(weatherDetailsElement, function() { // weatherDetailsElement全体をアニメーション対象に
                 if (!weatherDetailsElement || !weatherIconContainerElement || !weatherIconElement) return;
                 weatherDetailsElement.innerHTML = ''; 
                 weatherIconContainerElement.style.display = 'flex'; 
@@ -991,7 +997,11 @@
                     }
                     cityEl.textContent = '川崎市';
                 }
-            // });
+            });
+            // アイコンコンテナも同様にアニメーション
+            animateElementSwitch(weatherIconContainerElement, function() {
+                // アイコンの内容は updateWeatherDisplay の各条件分岐内で設定済みなので、ここでは何もしない
+            });
             if(currentLocationDisplay) currentLocationDisplay.textContent = 'LOCATION: KAWASAKI'; 
         }
 
@@ -1114,9 +1124,13 @@
         if (newsFetchIntervalId) clearInterval(newsFetchIntervalId);
         newsFetchIntervalId = setInterval(fetchNews, 60 * 60 * 1000); 
 
-        // fetchRandomRSSFeedの定期呼び出しは削除（初回のみ呼び出し、表示は固定）
-        // if (rssFetchIntervalId) clearInterval(rssFetchIntervalId);
-        // rssFetchIntervalId = setInterval(fetchRandomRSSFeed, 60 * 60 * 1000); 
+        if (rssFetchIntervalId) clearInterval(rssFetchIntervalId);
+        rssFetchIntervalId = setInterval(function() {
+            // RSS表示の最初のサイクル(displayState === 3)の時に新しい記事を取得する
+            if (displayState === 3) { 
+                 fetchRandomRSSFeed(); 
+            }
+        }, 5000 * MAX_WEATHER_DISPLAY_STATES); // 全ての天気の表示サイクルが一巡したタイミングで更新を試みる
 
         window.onresize = function() { 
             maintainAspectRatio(); 
