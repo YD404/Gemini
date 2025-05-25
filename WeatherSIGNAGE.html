@@ -59,7 +59,7 @@
             background-color: #333333;
             border: 2px solid #666666;
             border-radius: 8px;
-            padding: 3vmin;
+            padding: 2vmin 3vmin; 
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -92,11 +92,29 @@
             color: #eeeeee;
         }
 
-        #date {
-            font-size: 5vmin;
+        #date-container { 
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            justify-content: center;
             margin-top: 1vmin;
-            color: #cccccc;
+            min-height: 7vh; 
         }
+
+        #date { 
+            color: #cccccc;
+            text-align: center;
+            overflow: hidden; 
+            padding-left: 1vmin; 
+            padding-right: 1vmin;
+            line-height: 1.3; 
+        }
+        #attribution-text {
+            font-size: 1.8vmin; 
+            color: #888888; 
+            margin-top: 0.5vmin;
+        }
+
 
         .weather-icon-container {
             display: flex;
@@ -111,7 +129,6 @@
             height: auto;
             max-width: 25vmin; 
             max-height: 25vmin;
-            /* background-color: #dddddd; Dクラス職員によりコメントアウト */
             border-radius: 8px;
             padding: 1.5vmin;
             display: flex;
@@ -121,8 +138,8 @@
             margin: 0; 
         }
         #weather-icon .material-symbols-outlined {
-            font-size: 38vmin; /* Dクラス職員による設定値 */
-            color: #ffffffff; /* Dクラス職員による設定値 */
+            font-size: 38vmin; 
+            color: #ffffffff; 
         }
 
         .weather-details {
@@ -172,7 +189,6 @@
             display: none !important;
         }
 
-        /* Graph specific styles */
         #temp-graph-container {
             display: flex;
             flex-direction: column;
@@ -184,29 +200,28 @@
             padding: 1vmin 0; 
         }
         .graph-title {
-            font-size: 3vmin;
+            font-size: 2vmin;
             color: #eeeeee;
-            margin-bottom: 0.5vmin; /* Reduced margin further */
+            margin-bottom: 0.1vmin; 
             text-align: center;
         }
         .svg-graph-wrapper { 
-            width: 98%; /* SVG takes most of the container width */
+            width: 98%; 
             flex-grow: 1; 
             display: flex;
             justify-content: center;
             align-items: center;
         }
         #temp-line-graph { 
-            /* width and height set by JS or 100% of wrapper */
         }
         .axis-label {
             font-family: 'Roboto Mono', monospace;
-            font-size: 1.8vmin; /* Adjusted for 7-day view */
+            font-size: 1.8vmin; 
             fill: #cccccc;
         }
         .temp-value-label {
             font-family: 'Roboto Mono', monospace;
-            font-size: 2.0vmin; /* Adjusted for 7-day view */
+            font-size: 3.0vmin; 
             fill: #dddddd;
         }
 
@@ -218,7 +233,10 @@
             <div class="content-area">
                 <div class="time-section">
                     <div id="time" class="font-roboto-mono">--:--:--</div>
-                    <div id="date" class="font-noto">----年--月--日 (-)</div>
+                    <div id="date-container"> 
+                        <div id="date" class="font-noto">----年--月--日 (-)</div>
+                        <div id="attribution-text" class="font-noto hidden"></div> 
+                    </div>
                 </div>
                 <div class="weather-section">
                     <div class="weather-icon-container"> 
@@ -244,6 +262,7 @@
 
         var timeElement = document.getElementById('time');
         var dateElement = document.getElementById('date');
+        var attributionTextElement = document.getElementById('attribution-text'); 
         var weatherIconContainerElement = document.querySelector('.weather-icon-container');
         var weatherIconElement = document.getElementById('weather-icon');
         var temperatureElement = document.getElementById('temperature');
@@ -253,10 +272,16 @@
 
         var todayWeatherData = null;
         var tomorrowWeatherData = null;
-        var weeklyMaxTemps = []; // Array to store 7-day max temperatures
-        var weeklyDates = []; // Array to store dates for the 7-day forecast
+        var weeklyMaxTemps = []; 
+        var weeklyDates = []; 
 
-        var displayState = 0; // 0: Today, 1: Tomorrow, 2: Graph
+        var newsHeadlines = []; 
+        var dateNewsDisplayState = 0; // 0: 日付, 1-N: ニュース(Nは取得件数)
+        var dateNewsToggleIntervalId = null; 
+        var newsFetchIntervalId = null; 
+
+
+        var displayState = 0; 
         var weatherIntervalId = null;
         var displayToggleIntervalId = null;
 
@@ -274,20 +299,115 @@
                 return padString.slice(0, targetLength) + String(str);
             }
         }
+        
+        function updateDateOrNewsDisplay() {
+            attributionTextElement.classList.add('hidden'); 
 
-        function updateTime() {
+            if (dateNewsDisplayState === 0) { // 日付表示
+                var now = new Date();
+                var year = now.getFullYear();
+                var month = customPadStart(now.getMonth() + 1, 2, '0');
+                var day = customPadStart(now.getDate(), 2, '0');
+                var dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+                dateElement.textContent = year + "年" + month + "月" + day + "日 (" + dayOfWeek + ")";
+                dateElement.style.fontSize = "4.5vmin"; 
+                dateElement.style.whiteSpace = "nowrap"; 
+                attributionTextElement.textContent = "weather by Open-Meteo, News by Zenn"; // 出典をZennに変更
+                attributionTextElement.classList.remove('hidden'); 
+            } else if (dateNewsDisplayState > 0 && newsHeadlines.length >= dateNewsDisplayState) { // ニュース表示
+                dateElement.textContent = newsHeadlines[dateNewsDisplayState - 1]; // 配列のインデックスに合わせる
+                dateElement.style.fontSize = "3.5vmin"; 
+                dateElement.style.whiteSpace = "normal"; 
+            } else { // フォールバック (ニュースがない場合やインデックス不正など)
+                var now = new Date();
+                var year = now.getFullYear();
+                var month = customPadStart(now.getMonth() + 1, 2, '0');
+                var day = customPadStart(now.getDate(), 2, '0');
+                var dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+                dateElement.textContent = year + "年" + month + "月" + day + "日 (" + dayOfWeek + ")";
+                dateElement.style.fontSize = "4.5vmin";
+                dateElement.style.whiteSpace = "nowrap";
+                attributionTextElement.textContent = "weather by Open-Meteo, News by Zenn";
+                attributionTextElement.classList.remove('hidden');
+                
+                // 予期せぬ表示状態になった場合は日付に戻す
+                dateNewsDisplayState = 0; 
+            }
+        }
+
+
+        function updateTime() { 
             var now = new Date();
             var hours = customPadStart(now.getHours(), 2, '0');
             var minutes = customPadStart(now.getMinutes(), 2, '0');
             var seconds = customPadStart(now.getSeconds(), 2, '0');
             timeElement.textContent = hours + ":" + minutes + ":" + seconds;
-
-            var year = now.getFullYear();
-            var month = customPadStart(now.getMonth() + 1, 2, '0');
-            var day = customPadStart(now.getDate(), 2, '0');
-            var dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
-            dateElement.textContent = year + "年" + month + "月" + day + "日 (" + dayOfWeek + ")";
         }
+
+
+        function fetchNews() {
+            var rssUrl = "https://zenn.dev/topics/ai/feed"; // Zenn AIトピックRSS URLに変更
+            var proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rssUrl);
+            console.log("ニュース取得試行中: " + proxyUrl); 
+
+            fetch(proxyUrl, { cache: 'no-store' }) 
+                .then(function(response) {
+                    if (!response.ok) {
+                        return response.text().then(function(text) {
+                            console.error("RSS取得エラーレスポンス:", text);
+                            throw new Error("RSS取得エラー: " + response.status + " - " + response.statusText);
+                        });
+                    }
+                    return response.text();
+                })
+                .then(function(str) {
+                    var parser = new DOMParser();
+                    var xmlDoc = parser.parseFromString(str, "text/xml");
+                    var errorNode = xmlDoc.querySelector("parsererror"); 
+                    if (errorNode) {
+                        console.error("RSS解析エラー (parsererror):", errorNode.textContent);
+                        throw new Error("RSS解析エラー");
+                    }
+                    var items = xmlDoc.getElementsByTagName("entry"); // Zennは<entry>
+                    if (items.length === 0) { 
+                        items = xmlDoc.getElementsByTagName("item"); // Fallback
+                    }
+
+                    var fetchedHeadlines = [];
+                    // 取得できる全てのヘッドラインを格納 (最大件数はフィードによる)
+                    for (var i = 0; i < items.length; i++) { 
+                        var titleElement = items[i].getElementsByTagName("title")[0];
+                        if (titleElement) {
+                            fetchedHeadlines.push(titleElement.textContent);
+                        }
+                    }
+                    newsHeadlines = fetchedHeadlines;
+                    if (newsHeadlines.length === 0) {
+                        console.warn("ニュースヘッドラインを取得できませんでした。");
+                        if (dateNewsDisplayState > 0) { 
+                             dateElement.textContent = "ニュースなし";
+                             dateElement.style.fontSize = "3.5vmin";
+                             dateElement.style.whiteSpace = "normal";
+                             attributionTextElement.classList.add('hidden');
+                        }
+                    }
+                    // ニュース取得後、表示状態がニュースであれば更新
+                    if (dateNewsDisplayState > 0) { 
+                        updateDateOrNewsDisplay();
+                    }
+                })
+                .catch(function(error) {
+                    console.error("ニュース取得または解析最終エラー:", error);
+                    newsHeadlines = []; 
+                    if (dateNewsDisplayState > 0) { 
+                        dateElement.textContent = "ニュース取得エラー"; 
+                        dateElement.style.fontSize = "3.5vmin";
+                        dateElement.style.whiteSpace = "normal";
+                        attributionTextElement.classList.add('hidden');
+                    }
+                });
+        }
+
 
         function getWeatherInfoFromWMOCode(code) {
             var wmoMap = {
@@ -336,7 +456,7 @@
             var svgWidth = svgWrapper.offsetWidth || 200; 
             var svgHeight = svgWrapper.offsetHeight || 100; 
 
-            var margin = { top: 20, right: 20, bottom: 45, left: 35 }; // Adjusted margins for 7 days
+            var margin = { top: 20, right: 20, bottom: 45, left: 35 }; 
             var graphWidth = svgWidth - margin.left - margin.right;
             var graphHeight = svgHeight - margin.top - margin.bottom;
 
@@ -387,22 +507,21 @@
                 return graphHeight - ((temp - yMin) / (yMax - yMin)) * graphHeight;
             }
             function scaleX(dayIndex) {
-                if (temps.length <= 1) return graphWidth / 2; // Single point
+                if (temps.length <= 1) return graphWidth / 2; 
                 return (graphWidth / (temps.length -1 )) * dayIndex;
             }
 
 
-            // Draw Y-axis
             var yAxisLine = document.createElementNS(svgNS, "line");
             yAxisLine.setAttribute("x1", "0"); yAxisLine.setAttribute("y1", "0");
             yAxisLine.setAttribute("x2", "0"); yAxisLine.setAttribute("y2", graphHeight);
             yAxisLine.setAttribute("stroke", "#777"); yAxisLine.setAttribute("stroke-width", "1");
             g.appendChild(yAxisLine);
 
-            var numYTicks = 3; // Example: Min, Mid, Max
+            var numYTicks = 3; 
             for (var i = 0; i <= numYTicks; i++) {
                 var val = yMin + (i/numYTicks) * (yMax - yMin);
-                if (i === numYTicks/2 && numYTicks % 2 === 0 && numYTicks > 1) continue; // Avoid mid-point if even ticks
+                if (i === numYTicks/2 && numYTicks % 2 === 0 && numYTicks > 1) continue; 
                 var yLabel = document.createElementNS(svgNS, "text");
                 yLabel.setAttribute("class", "axis-label");
                 yLabel.setAttribute("x", -5);
@@ -413,7 +532,6 @@
                 g.appendChild(yLabel);
             }
             
-            // Draw X-axis
             var xAxisLine = document.createElementNS(svgNS, "line");
             xAxisLine.setAttribute("x1", "0"); xAxisLine.setAttribute("y1", graphHeight);
             xAxisLine.setAttribute("x2", graphWidth); xAxisLine.setAttribute("y2", graphHeight);
@@ -436,7 +554,7 @@
                 line.setAttribute("d", linePath);
                 line.setAttribute("fill", "none");
                 line.setAttribute("stroke", "#eeeeee");
-                line.setAttribute("stroke-width", "3.5"); // Increased line thickness
+                line.setAttribute("stroke-width", "3.5"); 
                 line.setAttribute("stroke-linecap", "round");
                 line.setAttribute("stroke-linejoin", "round");
                 g.appendChild(line);
@@ -448,7 +566,7 @@
                 var circle = document.createElementNS(svgNS, "circle");
                 circle.setAttribute("cx", xPos);
                 circle.setAttribute("cy", yPos);
-                circle.setAttribute("r", "3.5"); // Slightly smaller circles for more points
+                circle.setAttribute("r", "3.5"); 
                 circle.setAttribute("fill", "#eeeeee");
                 circle.setAttribute("stroke", "#333333");
                 circle.setAttribute("stroke-width", "1.5");
@@ -457,7 +575,7 @@
                 var tempValLabel = document.createElementNS(svgNS, "text");
                 tempValLabel.setAttribute("class", "temp-value-label");
                 tempValLabel.setAttribute("x", xPos);
-                tempValLabel.setAttribute("y", yPos - 8); // Adjusted label position
+                tempValLabel.setAttribute("y", yPos - 8); 
                 tempValLabel.setAttribute("text-anchor", "middle");
                 tempValLabel.textContent = p.temp + "°";
                 g.appendChild(tempValLabel);
@@ -465,7 +583,7 @@
                 var xLabel = document.createElementNS(svgNS, "text");
                 xLabel.setAttribute("class", "axis-label");
                 xLabel.setAttribute("x", xPos);
-                xLabel.setAttribute("y", graphHeight + 18); // Adjusted label position
+                xLabel.setAttribute("y", graphHeight + 18); 
                 xLabel.setAttribute("text-anchor", "middle");
                 xLabel.textContent = p.label;
                 g.appendChild(xLabel);
@@ -545,7 +663,6 @@
 
 
         function fetchWeather() {
-            // Fetch 7 days of daily forecast
             var apiUrl = "https://api.open-meteo.com/v1/forecast?latitude=" + latitude + "&longitude=" + longitude + "&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia/Tokyo&forecast_days=7";
 
             fetch(apiUrl)
@@ -577,7 +694,7 @@
                         weeklyDates = [];
                         for (var i = 0; i < 7; i++) {
                             weeklyMaxTemps.push(data.daily.temperature_2m_max[i] !== null ? Math.round(data.daily.temperature_2m_max[i]) : null);
-                            weeklyDates.push(data.daily.time[i]); // Store date strings
+                            weeklyDates.push(data.daily.time[i]); 
                         }
 
 
@@ -586,7 +703,7 @@
                             displayToggleIntervalId = setInterval(function() {
                                 displayState = (displayState + 1) % 3; 
                                 updateWeatherDisplay();
-                            }, 10000);
+                            }, 10000); 
                         } else {
                             updateWeatherDisplay(); 
                         }
@@ -607,12 +724,28 @@
                 });
         }
 
-        updateTime();
-        fetchWeather();
+        updateTime(); 
+        updateDateOrNewsDisplay(); 
+        fetchWeather(); 
+        fetchNews(); 
 
-        setInterval(updateTime, 1000);
+        setInterval(updateTime, 1000); 
+
+        if (dateNewsToggleIntervalId) clearInterval(dateNewsToggleIntervalId);
+        dateNewsToggleIntervalId = setInterval(function() { 
+            // ニュースの数 + 日付表示(1) で割った余りを計算
+            var cycleLength = newsHeadlines.length > 0 ? newsHeadlines.length + 1 : 1;
+            dateNewsDisplayState = (dateNewsDisplayState + 1) % cycleLength; 
+            updateDateOrNewsDisplay();
+        }, 10000); 
+
+
         if (weatherIntervalId) clearInterval(weatherIntervalId);
-        weatherIntervalId = setInterval(fetchWeather, 15 * 60 * 1000);
+        weatherIntervalId = setInterval(fetchWeather, 15 * 60 * 1000); 
+
+        if (newsFetchIntervalId) clearInterval(newsFetchIntervalId);
+        newsFetchIntervalId = setInterval(fetchNews, 60 * 60 * 1000); 
+
 
         function maintainAspectRatio() {
             var wrapper = document.querySelector('.aspect-ratio-wrapper');
