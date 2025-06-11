@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUIは怖くない</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基本のフォント設定 */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* bodyのスクロールを無効化 */
+        }
+        body, input {
+            font-family: 'Space Mono', 'Noto Sans JP', monospace;
+        }
+        /* 入力欄のネイティブカーソルの色を指定 */
+        #command-input {
+            caret-color: white;
+        }
+        /* スクロールバーを非表示にする */
+        #cui-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+        #cui-wrapper {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* helpコマンドのレイアウト調整 */
+        .help-dt {
+            width: 13rem;
+        }
+        pre {
+             white-space: pre-wrap;
+             word-break: break-all;
+        }
+
+        /* スマートフォン向けのレスポンシブ対応 */
+        @media (max-width: 640px) {
+            body {
+                font-size: 14px; /* 文字サイズを少し小さくする */
+            }
+            /* ヘルプのレイアウトを縦並びに変更 */
+            .help-dt {
+                width: 100%;
+                margin-bottom: 0.1rem;
+            }
+            dl dd {
+                padding-left: 1rem; /* 説明文をインデント */
+            }
+            dd[class*="ml-"] {
+                margin-left: 0 !important; /* 使用例の大きなマージンをリセット */
+                padding-left: 1.5rem; /* 使用例を少しインデント */
+            }
+        }
+    </style>
+</head>
+<body class="bg-black text-white">
+
+    <div id="grid-container" class="grid grid-rows-[1fr_auto] h-full">
+        <main id="cui-wrapper" class="overflow-y-auto p-2.5" onclick="document.getElementById('command-input').focus()">
+            </main>
+
+        <footer id="cui-footer" class="p-2.5 border-t border-gray-800">
+            <div class="flex items-center">
+                <span class="text-yellow-300">user@portfolio:<span id="current-path" class="text-blue-400">~</span>$</span>
+                <input type="text" id="command-input" class="bg-transparent border-none outline-none text-white flex-grow ml-2" autofocus>
+            </div>
+        </footer>
+    </div>
+
+
+    <script type="module">
+        // --- DOM要素の取得 ---
+        const commandInput = document.getElementById('command-input');
+        const cuiWrapper = document.getElementById('cui-wrapper');
+        const currentPathEl = document.getElementById('current-path');
+
+        // --- 状態管理 ---
+        const startTime = new Date();
+        let commandHistory = [];
+        let historyIndex = -1;
+        let currentLanguage = 'ja'; // 'ja' (日本語モード) or 'en' (英語モード)
+
+        // --- 多言語対応テキスト ---
+        const uiText = {
+            welcome: { ja: 'CUIへようこそ (練習モード)', en: 'Welcome to CUI (Production Mode)' },
+            helpPrompt: { ja: '`おしえて` または `help` と入力すると、コマンド一覧が表示されます。', en: "Type `help` to see available commands." },
+            moreHelpPrompt: { ja: 'さらに多くのコマンドを表示するには、`おしえて もっと`と入力してください。', en: 'For more commands, type `help -more`.'},
+            firstStepAdvice: { ja: 'まずは `ls` (みる, いちらん) を実行して、`cat` (ひらく, なかみ) でファイルを開いてみよう！', en: ''},
+            catMissingOperandJa: 'cat: オペランド（操作対象のファイル名）がありません。<br>たとえば..）`cat README.md` のように、ファイル名を指定してください。',
+            cdMissingOperandJa: 'cd: オペランド（移動先のディレクトリ名）がありません。<br>たとえば..）`cd projects` のように、ディレクトリ名を指定してください。',
+            mkdirMissingOperandJa: 'mkdir: オペランド（作成するディレクトリ名）がありません。<br>たとえば..）`mkdir 新しいフォルダ` のように、ディレクトリ名を指定してください。',
+            touchMissingOperandJa: 'touch: オペランド（作成するファイル名）がありません。<br>たとえば..）`touch 新しいファイル.txt` のように、ファイル名を指定してください。',
+            rmMissingOperandJa: 'rm: オペランド（削除するファイル/ディレクトリ名）がありません。<br>たとえば..）`rm 新しいファイル.txt` のように、対象を指定してください。',
+            languageSet: { ja: '言語を日本語に設定しました。', en: 'Language set to English.' },
+            commandNotFound: { ja: 'コマンドが見つかりません', en: 'Command not found' },
+            missingOperand: { ja: 'オペランドがありません', en: 'missing operand'},
+            noSuchFile: { ja: 'ファイルが見つかりません', en: 'no such file'},
+            noSuchDirectory: { ja: 'ディレクトリが見つかりません', en: 'no such file or directory'},
+            fileExists: { ja: 'ファイルまたはディレクトリが既に存在します', en: 'file or directory already exists'},
+            dirNotEmpty: { ja: 'ディレクトリが空ではありません', en: 'Directory not empty'},
+            isDirError: { ja: 'ディレクトリです', en: 'Is a directory'},
+            cannotGoBack: { ja: '本来なら遡れますが、このサイトではこれ以上遡れません。', en: 'Cannot go back further. You are at the root directory.' },
+            helpHeader: { ja: '利用可能なコマンド', en: 'Available commands'},
+            commandDesc: {
+                help: { ja: 'このヘルプメッセージを表示します。', en: 'Show this help message.' },
+                language: { ja: '言語を日本語(練習)と英語(本番)で切り替えます。', en: 'Toggle language between Japanese (Practice) and English (Production).'},
+                profile: { ja: 'プロフィール情報を表示します。', en: 'Display profile information.' },
+                ls: { ja: 'ファイルとディレクトリの一覧を表示します。', en: 'List directory contents.' },
+                cd: { ja: 'ディレクトリを移動します。', en: 'Change directory.' },
+                cat: { ja: 'ファイルの内容を表示します。', en: 'Display file contents.' },
+                pwd: { ja: '現在のディレクトリのパスを表示します。', en: 'Print working directory path.' },
+                date: { ja: '現在の日時を表示します。', en: 'Display the current date and time.' },
+                whoami: { ja: '現在のユーザー名を表示します。', en: 'Display the current user.' },
+                clear: { ja: '画面の表示を消去します。', en: 'Clear the screen.' },
+                echo: { ja: '指定した文字列を表示します。', en: 'Display a line of text.' },
+                mkdir: { ja: '新しいディレクトリを作成します。', en: 'Make directories.' },
+                touch: { ja: '新しい空のファイルを作成します。', en: 'Create an empty file.' },
+                rm: { ja: 'ファイルまたは空のディレクトリを削除します。', en: 'Remove files or empty directories.' },
+                ping: { ja: 'ネットワーク上のホストに応答を要求します。', en: 'Send ICMP ECHO_REQUEST to network hosts.'},
+                ip: { ja: 'ネットワークインターフェースの情報を表示します。', en: 'Show / manipulate routing, devices, policy routing and tunnels.'},
+                ss: { ja: 'ソケットの接続情報を調査します。', en: 'Investigate sockets.'},
+                hostname: { ja: 'システムのホスト名を表示します。', en: 'Show system\'s host name.'},
+                uptime: { ja: 'システムの稼働時間を表示します。', en: 'Tell how long the system has been running.'},
+                top: { ja: '実行中のプロセス情報を表示します。', en: 'Display Linux processes.'},
+                free: { ja: 'システムのメモリ使用量を表示します。', en: 'Display amount of free and used memory in the system.'},
+                df: { ja: 'ディスクの空き容量を表示します。', en: 'Report file system disk space usage.'},
+                ps: { ja: '現在実行中のプロセスを表示します。', en: 'Report a snapshot of the current processes.'},
+                id: { ja: 'ユーザーID情報を表示します。', en: 'Print real and effective user and group IDs.'},
+                uname: { ja: 'システム情報を表示します。', en: 'Print system information.'}
+            }
+        };
+
+        // --- 擬似ファイルシステム ---
+        let filesystem = {
+            'type': 'directory',
+            'children': {
+                'profile.txt': { 'type': 'file', 'content': 'Name: AI Language Model\nVersion: 2.0\nSkills: HTML, CSS, JavaScript' },
+                'projects': { 'type': 'directory', 'children': { 'project-alpha.txt': { 'type': 'file', 'content': 'Details for Project Alpha.' } } },
+                'README.md': { 'type': 'file', 'content': 'このサイトは「CUIは怖くない」をコンセプトに、CUIに慣れていただくために作成しました。\nブラウザでCUIを実装するという着想は、カロリーメイトのキャンペーンページから得ています。\n\n参照: https://www.otsuka.co.jp/cmt/to_programmer/cui/\n\nなお、このサイトのプログラムはすべてGeminiによって生成されています。' }
+            }
+        };
+        let currentDirectory = filesystem;
+        let currentPathStack = [];
+
+        // --- 初期化 ---
+        function initCui() {
+            cuiWrapper.innerHTML = ''; 
+            currentLanguage = 'ja'; // 起動時は日本語モード
+            printOutput(`<p><span class="text-yellow-300">${uiText.welcome.ja}</span></p>`);
+            printOutput(`<p>${uiText.helpPrompt.ja}</p><br>`);
+            updatePrompt();
+        }
+
+        // --- UI更新関数 ---
+        function printOutput(html) { cuiWrapper.innerHTML += html; scrollToBottom(); }
+        function printCommand(command) {
+            const prompt = `<span>user@portfolio:<span class="text-blue-400">${getCurrentPathString()}</span>$</span>`;
+            printOutput(`<div class="flex"><span class="text-yellow-300">${prompt}</span><span class="ml-2">${escapeHtml(command)}</span></div>`);
+        }
+        function scrollToBottom() { cuiWrapper.scrollTop = cuiWrapper.scrollHeight; }
+        function updatePrompt() { currentPathEl.textContent = getCurrentPathString(); }
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+        function getCurrentPathString() { return '~' + (currentPathStack.length > 0 ? '/' + currentPathStack.join('/') : ''); }
+        
+        // --- コマンドエイリアス（日本語コマンド） ---
+        const commandAliases = {
+            'おしえて': 'help',
+            'げんご': 'language', '言語': 'language',
+            'プロフィール': 'profile',
+            'クリア': 'clear', 'けす': 'clear',
+            'ひづけ': 'date', 'じかん': 'date',
+            'わたしはだれ': 'whoami',
+            'ここはどこ': 'pwd',
+            'みる': 'ls', 'いちらん': 'ls',
+            'いどう': 'cd',
+            'ひらく': 'cat', 'なかみ': 'cat',
+            'おうむ': 'echo',
+            'つくる': 'mkdir',
+            'さわる': 'touch',
+            'さくじょ': 'rm',
+            'ぴんぐ': 'ping',
+            'あいぴー': 'ip',
+            'えすえす': 'ss',
+            'ほすとめい': 'hostname',
+            'かどうじかん': 'uptime',
+            'とっぷ': 'top',
+            'めもり': 'free',
+            'でぃすく': 'df',
+            'ぷろせす': 'ps',
+            'あいでぃー': 'id',
+            'ゆーねーむ': 'uname'
+        };
+        
+        // --- コマンド定義 ---
+        const commands = {
+            'language': () => {
+                currentLanguage = (currentLanguage === 'ja') ? 'en' : 'ja';
+                return `<p>${uiText.languageSet[currentLanguage]}</p>`;
+            },
+            'help': (args) => {
+                const showAll = args[0] === '-more' || (currentLanguage === 'ja' && args[0] === 'もっと');
+                let output = `<div class="mt-1 mb-2"><p class="mb-1">${uiText.helpHeader[currentLanguage]}</p><dl>`;
+                
+                const baseCommandList = ['help', 'language', 'ls', 'cd', 'cat', 'pwd', 'mkdir', 'rm', 'clear', 'date'];
+                const extendedCommandList = ['id', 'uname', 'hostname', 'uptime', 'ping', 'ip', 'ss', 'ps', 'df', 'free', 'top', 'echo', 'touch', 'whoami'];
+                const commandList = showAll ? [...baseCommandList, ...extendedCommandList].sort() : baseCommandList.sort();
+
+                const examplePrefix = currentLanguage === 'ja' ? 'たとえば..）' : 'e.g.,)';
+                
+                commandList.forEach(cmd => {
+                    let cmdText = cmd;
+                    if (currentLanguage === 'ja') {
+                        const aliases = Object.keys(commandAliases).filter(key => commandAliases[key] === cmd);
+                        if (aliases.length > 0) cmdText += ` (${aliases.join(', ')})`;
+                    }
+                    output += `<dt class="help-dt inline-block text-green-400 align-top">${cmdText}</dt><dd class="inline-block">${uiText.commandDesc[cmd][currentLanguage]}</dd><br>`;
+                    
+                    let exampleHtml = '';
+                    switch (cmd) {
+                        case 'cd':
+                            exampleHtml += `<dd class="inline-block w-full ml-[13rem] text-gray-400 text-sm">${examplePrefix} cd projects</dd><br>`;
+                            exampleHtml += `<dd class="inline-block w-full ml-[13rem] text-gray-400 text-sm">${examplePrefix} cd ..</dd><br>`;
+                            break;
+                        case 'cat':
+                            exampleHtml += `<dd class="inline-block w-full ml-[13rem] text-gray-400 text-sm">${examplePrefix} cat README.md</dd><br>`;
+                            break;
+                        case 'echo':
+                            exampleHtml += `<dd class="inline-block w-full ml-[13rem] text-gray-400 text-sm">${examplePrefix} echo こんにちは</dd><br>`;
+                            break;
+                        case 'mkdir':
+                            exampleHtml += `<dd class="inline-block w-full ml-[13rem] text-gray-400 text-sm">${examplePrefix} mkdir 新しいフォルダ</dd><br>`;
+                            break;
+                        case 'touch':
+                             exampleHtml += `<dd class="inline-block w-full ml-[13rem] text-gray-400 text-sm">${examplePrefix} touch 新しいファイル.txt</dd><br>`;
+                            break;
+                        case 'rm':
+                             exampleHtml += `<dd class="inline-block w-full ml-[13rem] text-gray-400 text-sm">${examplePrefix} rm 新しいファイル.txt</dd><br>`;
+                            break;
+                        case 'ping':
+                             exampleHtml += `<dd class="inline-block w-full ml-[13rem] text-gray-400 text-sm">${examplePrefix} ping google.com</dd><br>`;
+                            break;
+                    }
+                    output += exampleHtml;
+                });
+
+                output += `</dl>`;
+
+                if (!showAll) {
+                    output += `<p class="mt-2 text-yellow-300">${uiText.moreHelpPrompt[currentLanguage]}</p>`;
+                    if(currentLanguage === 'ja'){
+                        output += `<p class="mt-1 text-green-300">${uiText.firstStepAdvice.ja}</p>`;
+                    }
+                }
+                output += `</div>`;
+                return output;
+            },
+            'profile': () => commands['cat'](['profile.txt']),
+            'clear': () => { cuiWrapper.innerHTML = ''; return ''; },
+            'date': () => `<p>${new Date().toString()}</p>`,
+            'whoami': () => `<p>user</p>`,
+            'id': () => `<p>uid=1000(user) gid=1000(user) groups=1000(user)</p>`,
+            'pwd': () => `<p>/home/user${currentPathStack.length > 0 ? '/' + currentPathStack.join('/') : ''}</p>`,
+            'uname': () => `<p>Linux portfolio-cui 5.4.0-cui-generic x86_64 GNU/Linux</p>`,
+            'hostname': () => `<p>portfolio-cui</p>`,
+            'ls': () => {
+                if (!currentDirectory.children) return '';
+                let output = '';
+                Object.keys(currentDirectory.children).sort().forEach(key => {
+                    const item = currentDirectory.children[key];
+                    const color = item.type === 'directory' ? 'text-blue-400' : 'text-white';
+                    output += `<span class="${color} mr-4">${key}</span>`;
+                });
+                return `<div class="flex flex-wrap">${output}</div>`;
+            },
+            'cd': (args) => {
+                const dir = args[0];
+                 if (!dir) {
+                     if (currentLanguage === 'ja') return `<p>${uiText.cdMissingOperandJa}</p>`;
+                     return `<p>cd: ${uiText.missingOperand[currentLanguage]}</p>`;
+                 }
+                
+                if (dir === '..' || dir === '../') {
+                    if (currentPathStack.length > 0) {
+                        currentPathStack.pop();
+                        let newDir = filesystem;
+                        for(const part of currentPathStack) newDir = newDir.children[part];
+                        currentDirectory = newDir;
+                    } else {
+                        return `<p>${uiText.cannotGoBack[currentLanguage]}</p>`;
+                    }
+                } else if (currentDirectory.children && currentDirectory.children[dir] && currentDirectory.children[dir].type === 'directory') {
+                    currentDirectory = currentDirectory.children[dir];
+                    currentPathStack.push(dir);
+                } else {
+                    return `<p>cd: ${uiText.noSuchDirectory[currentLanguage]}: ${escapeHtml(dir)}</p>`;
+                }
+                updatePrompt();
+                return '';
+            },
+            'cat': (args) => {
+                 const targetName = args[0];
+                 if (!targetName) {
+                     if (currentLanguage === 'ja') return `<p>${uiText.catMissingOperandJa}</p>`;
+                     return `<p>cat: ${uiText.missingOperand[currentLanguage]}</p>`;
+                 }
+                 const target = currentDirectory.children[targetName];
+                 if (!target) return `<p>cat: ${uiText.noSuchFile[currentLanguage]}: ${escapeHtml(targetName)}</p>`;
+                 if (target.type === 'directory') return `<p>cat: ${escapeHtml(targetName)}: ${uiText.isDirError[currentLanguage]}</p>`;
+                 return `<pre class="whitespace-pre-wrap">${escapeHtml(target.content)}</pre>`;
+            },
+            'echo': (args) => `<p>${escapeHtml(args.join(' '))}</p>`,
+            'mkdir': (args) => {
+                const dirName = args[0];
+                 if (!dirName) {
+                     if (currentLanguage === 'ja') return `<p>${uiText.mkdirMissingOperandJa}</p>`;
+                     return `<p>mkdir: ${uiText.missingOperand[currentLanguage]}</p>`;
+                 }
+                if (currentDirectory.children[dirName]) return `<p>mkdir: ${uiText.fileExists[currentLanguage]}: ${escapeHtml(dirName)}</p>`;
+                currentDirectory.children[dirName] = { type: 'directory', children: {} };
+                return '';
+            },
+            'touch': (args) => {
+                const fileName = args[0];
+                 if (!fileName) {
+                     if (currentLanguage === 'ja') return `<p>${uiText.touchMissingOperandJa}</p>`;
+                     return `<p>touch: ${uiText.missingOperand[currentLanguage]}</p>`;
+                 }
+                if (currentDirectory.children[fileName]) return `<p>touch: ${uiText.fileExists[currentLanguage]}: ${escapeHtml(fileName)}</p>`;
+                currentDirectory.children[fileName] = { type: 'file', content: ''};
+                return '';
+            },
+            'rm': (args) => {
+                const targetName = args[0];
+                 if (!targetName) {
+                     if (currentLanguage === 'ja') return `<p>${uiText.rmMissingOperandJa}</p>`;
+                     return `<p>rm: ${uiText.missingOperand[currentLanguage]}</p>`;
+                 }
+                const target = currentDirectory.children[targetName];
+                if (!target) return `<p>rm: ${uiText.noSuchFile[currentLanguage]}: ${escapeHtml(targetName)}</p>`;
+                if(target.type === 'directory' && Object.keys(target.children).length > 0) return `<p>rm: ${uiText.dirNotEmpty[currentLanguage]}: ${escapeHtml(targetName)}</p>`;
+                delete currentDirectory.children[targetName];
+                return '';
+            },
+            'ping': (args) => {
+                const host = args[0] || '127.0.0.1';
+                return `<pre>PING ${escapeHtml(host)} (::1): 56 data bytes
+64 bytes from ::1: icmp_seq=0 ttl=64 time=0.045 ms
+64 bytes from ::1: icmp_seq=1 ttl=64 time=0.083 ms
+64 bytes from ::1: icmp_seq=2 ttl=64 time=0.071 ms</pre>`;
+            },
+            'ip': () => {
+                if(currentLanguage === 'ja') return `<pre>1: lo: &lt;ループバック,有効,下位層有効&gt; mtu 65536
+    inet 127.0.0.1/8 スコープ ホスト lo
+       有効期間 無期限 推奨期間 無期限
+2: eth0: &lt;ブロードキャスト,マルチキャスト,有効,下位層有効&gt; mtu 1500
+    inet 192.168.1.10/24 brd 192.168.1.255 スコープ グローバル
+       有効期間 無期限 推奨期間 無期限</pre>`;
+                return `<pre>1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500
+    inet 192.168.1.10/24 brd 192.168.1.255 scope global
+       valid_lft forever preferred_lft forever</pre>`;
+            },
+            'ss': () => {
+                if(currentLanguage === 'ja') return `<pre>状態       受信Q 送信Q ローカルアドレス:ポート   ピアアドレス:ポート
+LISTEN     0      128    127.0.0.1:ssh           *:*
+ESTAB      0      0      192.168.1.10:ssh        192.168.1.2:54321</pre>`;
+                return `<pre>State      Recv-Q Send-Q Local Address:Port Peer Address:Port
+LISTEN     0      128    127.0.0.1:ssh           *:*
+ESTAB      0      0      192.168.1.10:ssh        192.168.1.2:54321</pre>`;
+            },
+            'uptime': () => {
+                const now = new Date();
+                const diff = Math.floor((now - startTime) / 1000);
+                const days = Math.floor(diff / 86400);
+                const hours = Math.floor((diff % 86400) / 3600);
+                const minutes = Math.floor((diff % 3600) / 60);
+                if(currentLanguage === 'ja') return `<p> 稼働時間 ${days}日, ${hours}時間, ${minutes}分</p>`;
+                return `<p> up ${days} day(s), ${hours} hr, ${minutes} min</p>`;
+            },
+            'top': () => {
+                if(currentLanguage === 'ja') return `<pre>top - ユーザー:1人, 平均負荷: 0.01, 0.02, 0.00
+タスク: 104個, 実行中:1, スリープ:103, 停止:0, ゾンビ:0
+%CPU(s):  0.1 us,  0.1 sy,  0.0 ni, 99.8 id,  0.0 wa,  0.0 hi,  0.0 si
+メモリ MiB:   合計:1987.2,  空き:784.8,  使用中:501.9,  バッファ/キャッシュ:700.5
+スワップ MiB:  合計:2048.0,  空き:2048.0,   使用中:0.0,    利用可能:1234.5
+
+    PID ユーザー    PR  NI    VIRT    RES    SHR S  %CPU  %メモリ     時間+ コマンド
+   1234 user      20   0   12.2g  88180  43084 S   0.3   4.3   0:15.10 browser
+    890 user      20   0    2588    864    768 R   0.3   0.0   0:00.01 top
+      1 root      20   0  166100   6676   4188 S   0.0   0.3   0:01.34 systemd
+</pre>`;
+                return `<pre>top - 1 user,  load average: 0.01, 0.02, 0.00
+Tasks: 104 total,   1 running, 103 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.1 us,  0.1 sy,  0.0 ni, 99.8 id,  0.0 wa,  0.0 hi,  0.0 si
+MiB Mem :   1987.2 total,    784.8 free,    501.9 used,    700.5 buff/cache
+MiB Swap:   2048.0 total,   2048.0 free,      0.0 used.   1234.5 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   1234 user      20   0   12.2g  88180  43084 S   0.3   4.3   0:15.10 browser
+    890 user      20   0    2588    864    768 R   0.3   0.0   0:00.01 top
+      1 root      20   0  166100   6676   4188 S   0.0   0.3   0:01.34 systemd
+</pre>`;},
+            'free': () => {
+                if(currentLanguage === 'ja') return `<pre>              合計       使用中        空き      共有  バッファ/キャッシュ   利用可能
+メモリ:       2035004      513824      803704       44116      717476     1264024
+スワップ:     2097148           0     2097148</pre>`;
+                return `<pre>              total        used        free      shared  buff/cache   available
+Mem:          2035004      513824      803704       44116      717476     1264024
+Swap:         2097148           0     2097148</pre>`;
+            },
+            'df': () => {
+                 if(currentLanguage === 'ja') return `<pre>ファイルシステム    1K-ブロック      使用   利用可能 使用% マウント先
+/dev/vda1        25678976   5871236   19807740  23% /
+tmpfs             1017504         0    1017504   0% /dev/shm</pre>`;
+                return `<pre>Filesystem     1K-blocks      Used Available Use% Mounted on
+/dev/vda1       25678976   5871236  19807740  23% /
+tmpfs            1017504         0   1017504   0% /dev/shm</pre>`;
+            },
+            'ps': () => {
+                 if(currentLanguage === 'ja') return `<pre>ユーザー       PID %CPU %メモリ    VSZ   RSS TTY      STAT 開始   時間 コマンド
+user        1000  0.0  0.1  12345  6789 pts/0    Ss   10:00   0:00 /bin/bash
+user        1234  0.1  0.2  67890 12345 pts/0    R+   10:15   0:01 ps</pre>`;
+                return `<pre>USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+user        1000  0.0  0.1  12345  6789 pts/0    Ss   10:00   0:00 /bin/bash
+user        1234  0.1  0.2  67890 12345 pts/0    R+   10:15   0:01 ps</pre>`;
+            },
+        };
+
+        // --- コマンド実行ロジック ---
+        function executeCommand(input) {
+            let [command, ...args] = input.trim().split(/\s+/);
+            if (!command) return;
+
+            printCommand(input);
+
+            let executableCommand = command;
+            let commandArgs = args;
+
+            if (commandAliases[command] && currentLanguage === 'ja') {
+                executableCommand = commandAliases[command];
+            }
+            
+            if (commands[executableCommand]) {
+                // 'help もっと' のような引数を直接渡す
+                if (executableCommand === 'help' && command.toLowerCase() === 'おしえて' && args[0] === 'もっと') {
+                    commandArgs = ['もっと'];
+                }
+                const output = commands[executableCommand](commandArgs);
+                if(output) printOutput(output);
+            } else {
+                 printOutput(`<p><span class="text-red-500">${uiText.commandNotFound[currentLanguage]}: ${escapeHtml(command)}</span></p>`);
+            }
+            
+            commandHistory.unshift(input);
+            historyIndex = -1;
+            commandInput.value = '';
+            scrollToBottom();
+        }
+
+        // --- イベントリスナー ---
+        commandInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                executeCommand(commandInput.value);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    commandInput.value = commandHistory[historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    commandInput.value = commandHistory[historyIndex];
+                } else {
+                    historyIndex = -1;
+                    commandInput.value = '';
+                }
+            }
+        });
+
+        // --- 初期起動処理 ---
+        initCui();
+        commandInput.focus();
+
+    </script>
+</body>
+</html>
