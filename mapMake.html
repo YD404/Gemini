@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インタラクティブ架空地図エディタ</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <style>
+        /* Basic page styling */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        /* Map wrapper to hold both maps */
+        #map-wrapper {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: #aaddff; /* Default water color */
+        }
+
+        /* Fictional map container */
+        #map {
+            height: 100%;
+            width: 100%;
+            position: relative; 
+            z-index: 5; /* Lower z-index to be behind the real map */
+            background-color: transparent !important;
+        }
+
+        /* Real map container (overlay) */
+        #real-map-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10; /* Higher z-index to be in front */
+        }
+        
+        /* Cursors */
+        .cursor-crosshair {
+            cursor: crosshair;
+        }
+
+        /* --- Icon & Label Styling --- */
+        .icon-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+            border: 2px solid white;
+        }
+        .text-label-icon {
+            background: transparent;
+            border: none;
+            text-align: center;
+            font-weight: 500;
+            text-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white;
+        }
+        
+        /* Temp markers for drawing/editing */
+        .temp-marker, .edit-marker {
+            background-color: rgba(255, 0, 0, 0.7);
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            margin-left: -6px;
+            margin-top: -6px;
+            box-shadow: 0 0 5px black;
+        }
+        .edit-marker {
+            cursor: move !important;
+        }
+        
+        /* Control button styling */
+        .leaflet-control-custom a {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .leaflet-control-custom a .material-symbols-outlined {
+             font-size: 20px;
+        }
+        
+        /* Measure tooltip styling */
+        .measure-tooltip {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            box-shadow: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        /* Context Menu */
+        #context-menu {
+            position: absolute;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 4px 0;
+            z-index: 1001;
+        }
+        #context-menu button {
+            display: block;
+            width: 100%;
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #context-menu button:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Custom Scale Bar Styling */
+        .custom-scale-bar {
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid #999;
+            color: #333;
+            font-size: 11px;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        /* Hide scrollbar for mobile editor panel */
+        #editor-panel-content::-webkit-scrollbar {
+            display: none;
+        }
+        #editor-panel-content {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="map-wrapper">
+        <div id="real-map-container" class="hidden"></div>
+        <div id="map"></div>
+    </div>
+    
+    <input type="file" id="import-file-input" class="hidden" accept="application/json,.json">
+    
+    <div id="context-menu" class="hidden">
+        <button id="measure-from-here">ここからの距離</button>
+    </div>
+
+    <div id="editor-panel" class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-sm p-2 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-[1000]">
+        <div id="editor-panel-content" class="flex items-center justify-start md:justify-center space-x-4 overflow-x-auto p-2">
+            
+            <div class="flex-shrink-0">
+                <button id="add-terrain-btn" class="control-btn bg-slate-500 hover:bg-slate-600 text-white py-2 px-3 rounded-md text-sm">地形</button>
+            </div>
+
+            <div class="flex-shrink-0">
+                <button id="add-boundary-btn" class="control-btn bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-3 rounded-md text-sm">境界</button>
+            </div>
+
+            <div class="flex-shrink-0">
+                <button id="add-transport-btn" class="control-btn bg-teal-600 hover:bg-teal-700 text-white py-2 px-3 rounded-md text-sm">交通</button>
+            </div>
+
+             <div class="flex-shrink-0">
+                <button id="add-structure-btn" class="control-btn bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-3 rounded-md text-sm">建物</button>
+            </div>
+            
+             <div class="flex-shrink-0">
+                <button id="add-poi-btn" class="control-btn bg-amber-500 hover:bg-amber-600 text-white py-2 px-3 rounded-md text-sm">場所</button>
+                <button id="add-label-btn" class="control-btn bg-amber-500 hover:bg-amber-600 text-white py-2 px-3 rounded-md text-sm">地名</button>
+            </div>
+            
+             <div class="flex-shrink-0">
+                 <button id="export-data-btn" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-3 rounded-md text-sm">保存</button>
+                 <button id="import-data-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-3 rounded-md text-sm">読込</button>
+            </div>
+
+            <div class="flex-shrink-0 border-l pl-4 ml-4 border-gray-300">
+                <div class="space-y-2">
+                    <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 cursor-pointer">
+                        <input type="checkbox" id="toggle-real-map" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <span>実在地図を重ねる</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="edit-mode-status" class="text-center mt-1 p-1 bg-gray-100 rounded-md text-xs text-gray-700 hidden"></div>
+    </div>
+    
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[2000] flex justify-center items-center p-4">
+        <div class="bg-white p-6 rounded-lg shadow-2xl w-full max-w-md">
+            <h3 id="modal-title" class="text-lg font-bold mb-4">情報の編集</h3>
+            <div id="modal-form" class="space-y-4"></div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">キャンセル</button>
+                <button id="modal-save-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">保存</button>
+                 <button id="modal-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ml-auto">削除</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="export-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[2000] flex justify-center items-center p-4">
+        <div class="bg-white p-6 rounded-lg shadow-2xl w-full max-w-2xl h-full max-h-[90vh] flex flex-col">
+             <h3 class="text-lg font-bold mb-4">JSONエクスポート</h3>
+             <textarea id="export-textarea" class="w-full flex-grow p-2 border rounded-md font-mono text-sm" readonly></textarea>
+             <div class="mt-4 flex justify-end space-x-3">
+                <button id="export-modal-save-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">ファイルに保存</button>
+                <button id="export-modal-close-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            // ==================================================================
+            // DISTANCE CALCULATION FIX
+            // ==================================================================
+            L.CRS.Simple.distance = function(latlng1, latlng2) {
+                const dx = latlng2.lng - latlng1.lng;
+                const dy = latlng2.lat - latlng1.lat;
+                return Math.sqrt(dx * dx + dy * dy);
+            };
+
+            // ==================================================================
+            // INITIAL MAP DATA & DEFINITIONS
+            // ==================================================================
+            let fictionalMapData = {
+                settings: { center: [500, 500], zoom: -1.5 },
+                regions: [], routes: [], places: [], labels: []
+            };
+
+            const featurePresets = {
+                terrain: { targetArray: 'regions', shape: 'region', options: { land: '陸', forest: '森', pond: '池' } },
+                boundary: { targetArray: 'routes', shape: 'route', options: { river: '川', prefecture_border: '県境' } },
+                transport: { targetArray: 'routes', shape: 'route', options: { localRoad: '道', railway: '路線', sea_route: '航路' } },
+                structure: { targetArray: 'regions', shape: 'region', options: { building: '建物', station_area: '駅の敷地' } },
+            };
+
+            const typeProperties = {
+                land: { name: '新しい陸地', style: { fillColor: '#F8F8F8', color: '#E0E0E0', weight: 2, fillOpacity: 1 } },
+                forest: { name: '新しい森', style: { fillColor: '#C8E6C9', color: '#A5D6A7', weight: 1, fillOpacity: 1 } },
+                pond: { name: '新しい池', style: { fillColor: '#aaddff', color: '#aaddff', weight: 1, fillOpacity: 1 } },
+                building: { name: '新しい建物', style: { fillColor: '#E0E0E0', color: '#B0B0B0', weight: 1, fillOpacity: 1 } },
+                station_area: { name: '新しい駅の敷地', style: { fillColor: '#D97A6D', color: '#B84F47', weight: 1, fillOpacity: 0.5 } },
+                river: { name: '新しい川' },
+                prefecture_border: { name: '新しい県境' },
+                localRoad: { name: '新しい道' },
+                railway: { name: '新しい路線' },
+                sea_route: { name: '新しい航路' }
+            };
+            
+            // ==================================================================
+            // MAP & EDITOR STATE
+            // ==================================================================
+            // Fictional Map
+            const map = L.map('map', { 
+                crs: L.CRS.Simple, 
+                minZoom: -6, 
+                maxZoom: 5,
+                attributionControl: false // Disable default control
+            }); 
+            map.setView(fictionalMapData.settings.center, fictionalMapData.settings.zoom); 
+
+            // Add custom attribution control to a new position
+            L.control.attribution({
+                position: 'bottomleft'
+            }).addTo(map);
+            map.attributionControl.addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors');
+
+
+            // Real Map (for overlay)
+            const realMapContainer = document.getElementById('real-map-container');
+            const realMap = L.map('real-map-container', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([35.681236, 139.767125], 16);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(realMap);
+
+            const mapContainer = document.getElementById('map');
+            
+            let isViewMode = false;
+            let isMeasuring = false;
+            let editMode = { active: false, type: null, points: [], preset: {}, tempLayer: null, tempMarkers: [], isEditing: false, editContext: null };
+            let measureState = { points: [], polyline: null, markers: L.layerGroup(), totalDistance: 0, moveTooltip: null };
+
+            let allLayers = L.layerGroup().addTo(map);
+            const editorPanel = document.getElementById('editor-panel');
+            const contextMenu = document.getElementById('context-menu');
+            let contextMenuLatLng = null;
+
+            // ==================================================================
+            // LEAFLET CONTROLS (BUTTONS & SCALE)
+            // ==================================================================
+            const ViewModeControl = L.Control.extend({
+                onAdd: function(map) {
+                    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                    const link = L.DomUtil.create('a', 'leaflet-control-custom', container);
+                    link.href = '#';
+                    link.title = '鑑賞モードと編集モードを切り替え';
+                    link.innerHTML = `<span class="material-symbols-outlined">visibility</span>`;
+                    link.id = 'view-mode-btn';
+                    L.DomEvent.on(link, 'click', L.DomEvent.stop).on(link, 'click', toggleViewMode);
+                    return container;
+                }
+            });
+            new ViewModeControl({ position: 'topleft' }).addTo(map);
+
+            const scaleControl = L.control({position: 'topright'});
+            scaleControl.onAdd = function (map) {
+                this._div = L.DomUtil.create('div', 'custom-scale-bar leaflet-control');
+                this.update();
+                return this._div;
+            };
+            scaleControl.update = function () {
+                if (!map) return;
+                const mapBounds = map.getBounds();
+                const mapWidth = mapBounds.getEast() - mapBounds.getWest();
+                if (mapWidth <= 0) return;
+
+                const targetMeters = mapWidth / 5;
+                const niceDistance = getNiceDistance(targetMeters);
+                const niceWidth = (niceDistance / mapWidth) * map.getSize().x;
+                
+                this._div.innerHTML = `<div style="width: ${niceWidth}px; border-bottom: 2px solid #333; border-left: 1px solid #333; border-right: 1px solid #333; height: 5px;"></div><div style="text-align: center;">${formatDistance(niceDistance)}</div>`;
+            };
+            scaleControl.addTo(map);
+            map.on('zoomend moveend', () => scaleControl.update());
+
+            function getNiceDistance(meters) {
+                if (meters <= 0) return 0;
+                const power = Math.floor(Math.log10(meters));
+                const base = Math.pow(10, power);
+                const units = [1, 2, 5]; 
+                
+                let bestUnit = base;
+                for(let i = 0; i < units.length; i++) {
+                    let currentUnit = units[i] * base;
+                     if(meters >= currentUnit) {
+                        bestUnit = currentUnit;
+                    } else {
+                        break;
+                    }
+                }
+                return bestUnit;
+            }
+
+
+            // ==================================================================
+            // MODE MANAGEMENT
+            // ==================================================================
+            function toggleViewMode() {
+                isViewMode = !isViewMode;
+                const viewModeIcon = document.querySelector('#view-mode-btn .material-symbols-outlined');
+                if (isViewMode) {
+                    stopAllModes();
+                    editorPanel.classList.add('hidden');
+                    viewModeIcon.textContent = 'edit';
+                } else {
+                    editorPanel.classList.remove('hidden');
+                    viewModeIcon.textContent = 'visibility';
+                }
+            }
+            
+            function stopAllModes() {
+                if (editMode.active) stopEditMode();
+                if (isMeasuring) stopMeasureMode();
+            }
+            
+            // ==================================================================
+            // CONTEXT MENU
+            // ==================================================================
+            map.on('contextmenu', (e) => {
+                if (isViewMode || editMode.active || isMeasuring) return;
+                contextMenuLatLng = e.latlng;
+                contextMenu.style.left = `${e.containerPoint.x}px`;
+                contextMenu.style.top = `${e.containerPoint.y}px`;
+                contextMenu.classList.remove('hidden');
+            });
+
+            map.on('click', () => {
+                contextMenu.classList.add('hidden');
+            });
+
+            document.getElementById('measure-from-here').addEventListener('click', () => {
+                if (contextMenuLatLng) {
+                    if (!isMeasuring) {
+                        startMeasureMode();
+                    }
+                    addMeasurePoint(contextMenuLatLng);
+                }
+                contextMenu.classList.add('hidden');
+            });
+            
+            // ==================================================================
+            // RENDERING LOGIC
+            // ==================================================================
+            const routeStyles = {
+                river: { color: '#aaddff', weight: 4, opacity: 1 },
+                localRoad: { color: '#F2F2F2', weight: 4, opacity: 1 },
+                localRoadOutline: { color: '#D0D0D0', weight: 6, opacity: 1 },
+                railway: { color: '#A0A0A0', weight: 2, opacity: 0.9 },
+                prefecture_border: { color: '#333333', weight: 1, dashArray: '5, 5', opacity: 0.8 },
+                sea_route: { color: '#005c99', weight: 2, dashArray: '8, 8', opacity: 0.8 }
+            };
+
+            function renderAllFeatures(options = {}) {
+                allLayers.clearLayers();
+                const exclude = options.exclude || null;
+
+                const createPopupHandler = (targetArray, index) => (e) => {
+                    if (editMode.active || isViewMode || isMeasuring) return;
+                    L.DomEvent.stop(e); 
+                    const data = fictionalMapData[targetArray][index];
+                    const featureName = data.name || data.text || '名称未設定';
+
+                    const propsButton = document.createElement('button');
+                    propsButton.innerHTML = '情報編集';
+                    propsButton.className = 'bg-blue-500 text-white text-xs py-1 px-2 rounded hover:bg-blue-600';
+                    propsButton.onclick = () => { map.closePopup(); showEditModal(targetArray, index); };
+
+                    const shapeButton = document.createElement('button');
+                    shapeButton.innerHTML = '形状編集';
+                    shapeButton.className = 'bg-green-500 text-white text-xs py-1 px-2 rounded hover:bg-green-600 ml-2';
+                    shapeButton.onclick = () => { map.closePopup(); startShapeReEdit(targetArray, index); };
+
+                    const popupContent = document.createElement('div');
+                    popupContent.innerHTML = `<strong class="text-base">${featureName}</strong><br><br>`;
+                    popupContent.appendChild(propsButton);
+
+                    // Add shape editing button only for regions and routes
+                    if (targetArray === 'regions' || targetArray === 'routes') {
+                        popupContent.appendChild(shapeButton);
+                    }
+                    
+                    L.popup().setLatLng(e.latlng).setContent(popupContent).openOn(map);
+                };
+
+                fictionalMapData.regions.forEach((data, index) => {
+                    if (exclude && exclude.targetArray === 'regions' && exclude.index === index) return;
+                    L.polygon(data.coords, data.style).on('click', createPopupHandler('regions', index)).addTo(allLayers);
+                });
+                
+                fictionalMapData.routes.forEach((data, index) => {
+                    if (exclude && exclude.targetArray === 'routes' && exclude.index === index) return;
+                    const handler = createPopupHandler('routes', index);
+                    if (routeStyles[data.type + 'Outline']) {
+                         L.polyline(data.coords, routeStyles[data.type + 'Outline']).on('click', handler).addTo(allLayers);
+                    }
+                    L.polyline(data.coords, routeStyles[data.type] || routeStyles.localRoad).on('click', handler).addTo(allLayers);
+                });
+
+                fictionalMapData.labels.forEach((data, index) => {
+                    if (exclude && exclude.targetArray === 'labels' && exclude.index === index) return;
+                    L.marker(data.coords, { icon: createLabelIcon(data), interactive: true }).on('click', createPopupHandler('labels', index)).addTo(allLayers);
+                });
+                
+                fictionalMapData.places.forEach((data, index) => {
+                    if (exclude && exclude.targetArray === 'places' && exclude.index === index) return;
+                    L.marker(data.coords, { icon: createPlaceIcon(data) }).on('click', createPopupHandler('places', index)).addTo(allLayers);
+                });
+            }
+
+            function createPlaceIcon(place) { return L.divIcon({ html: `<div class="icon-container" style="background-color: ${place.color};"><span class="material-symbols-outlined">${{capital: 'fort', city: 'location_city', port: 'sailing'}[place.type] || 'place'}</span></div>`, className: '', iconSize: [28, 28], iconAnchor: [14, 28] }); }
+            function createLabelIcon(label) { return L.divIcon({ html: `<span style="font-size: ${label.fontSize}px; color: ${label.color || '#333333'};">${label.text}</span>`, className: 'text-label-icon', iconSize: [label.text.length * label.fontSize, label.fontSize] }); }
+
+            // ==================================================================
+            // EDITING MODAL
+            // ==================================================================
+            const modal = document.getElementById('edit-modal');
+            const modalForm = document.getElementById('modal-form');
+            let currentEditTarget = { type: null, index: null };
+
+            function showEditModal(targetArray, index, isNew = false, coords = null, preset = {}) {
+                currentEditTarget = { type: targetArray, index };
+                const data = isNew ? {} : fictionalMapData[targetArray][index];
+                document.getElementById('modal-delete-btn').style.display = isNew ? 'none' : 'block';
+                modalForm.innerHTML = '';
+                
+                let formFields = ``;
+
+                if (targetArray === 'labels') {
+                    formFields = `<div><label class="block text-sm font-medium text-gray-700">地名</label><input type="text" id="edit-text" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="${data.text || ''}"></div>
+                                  <div><label class="block text-sm font-medium text-gray-700">フォントサイズ</label><input type="number" id="edit-fontSize" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="${data.fontSize || 14}"></div>
+                                  <div><label class="block text-sm font-medium text-gray-700">色</label><input type="color" id="edit-color" class="mt-1 block w-full h-10" value="${data.color || '#000000'}"></div>`;
+                } else if (targetArray === 'places') {
+                    const placeTypes = { 'default': 'その他', 'capital': '首都', 'city': '都市', 'port': '港', 'museum': '博物館', 'station': '駅(アイコン)', 'park': '公園' };
+                    let typeOptions = Object.entries(placeTypes).map(([key, value]) => `<option value="${key}" ${key === data.type ? 'selected' : ''}>${value}</option>`).join('');
+                    formFields += `<div><label class="block text-sm font-medium text-gray-700">名前</label><input type="text" id="edit-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="${data.name || ''}"></div>`;
+                    formFields += `<div><label class="block text-sm font-medium text-gray-700">種類</label><select id="edit-type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">${typeOptions}</select></div>`;
+                    formFields += `<div><label class="block text-sm font-medium text-gray-700">説明</label><textarea id="edit-description" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">${data.description || ''}</textarea></div>`;
+                    formFields += `<div><label class="block text-sm font-medium text-gray-700">アイコン色</label><input type="color" id="edit-color" class="mt-1 block w-full h-10" value="${data.color || '#FFFFFF'}"></div>`;
+                } else {
+                     // For regions, routes
+                    formFields += `<div><label class="block text-sm font-medium text-gray-700">名前</label><input type="text" id="edit-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="${data.name || ''}"></div>`;
+
+                    if (isNew) {
+                         let typeOptions = Object.entries(preset.options).map(([key, value]) => `<option value="${key}">${value}</option>`).join('');
+                         formFields += `<div><label class="block text-sm font-medium text-gray-700">種類</label><select id="edit-type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">${typeOptions}</select></div>`;
+                    }
+                }
+                
+                modalForm.innerHTML = formFields;
+                modal.classList.remove('hidden');
+
+                document.getElementById('modal-save-btn').onclick = () => {
+                    if (isNew) {
+                        if(targetArray === 'places' || targetArray === 'labels'){
+                            const userInput = {};
+                            if(document.getElementById('edit-name')) userInput.name = document.getElementById('edit-name').value;
+                            if(document.getElementById('edit-text')) userInput.text = document.getElementById('edit-text').value;
+                            if(document.getElementById('edit-description')) userInput.description = document.getElementById('edit-description').value;
+                            if(document.getElementById('edit-type')) userInput.type = document.getElementById('edit-type').value;
+                            if(document.getElementById('edit-color')) userInput.color = document.getElementById('edit-color').value;
+                            if(document.getElementById('edit-fontSize')) userInput.fontSize = parseInt(document.getElementById('edit-fontSize').value, 10);
+                            fictionalMapData[targetArray].push({ ...preset, ...userInput, coords });
+                        } else {
+                            const selectedType = document.getElementById('edit-type').value;
+                            const defaultProps = typeProperties[selectedType];
+                            const name = document.getElementById('edit-name').value || defaultProps.name;
+                            const newFeature = { ...defaultProps, name: name, type: selectedType, coords: coords };
+                            fictionalMapData[targetArray].push(newFeature);
+                        }
+                    } else { // Editing existing item
+                        const item = fictionalMapData[targetArray][index];
+                        if(document.getElementById('edit-name')) item.name = document.getElementById('edit-name').value;
+                        if(document.getElementById('edit-text')) item.text = document.getElementById('edit-text').value;
+                        if(document.getElementById('edit-description')) item.description = document.getElementById('edit-description').value;
+                        if(document.getElementById('edit-type')) item.type = document.getElementById('edit-type').value;
+                        if(document.getElementById('edit-color')) item.color = document.getElementById('edit-color').value;
+                        if(document.getElementById('edit-fontSize')) item.fontSize = parseInt(document.getElementById('edit-fontSize').value, 10);
+                    }
+                    
+                    modal.classList.add('hidden');
+                    renderAllFeatures();
+                };
+            }
+            document.getElementById('modal-cancel-btn').onclick = () => modal.classList.add('hidden');
+            document.getElementById('modal-delete-btn').onclick = () => {
+                const { type, index } = currentEditTarget;
+                if (type && index !== null) {
+                    fictionalMapData[type].splice(index, 1);
+                    modal.classList.add('hidden');
+                    renderAllFeatures();
+                }
+            };
+
+            // ==================================================================
+            // EDITOR ADD/EDIT FEATURE LOGIC
+            // ==================================================================
+            const editStatusDiv = document.getElementById('edit-mode-status');
+
+            function startShapeReEdit(targetArray, index) {
+                const featureData = fictionalMapData[targetArray][index];
+                if (!featureData || !featureData.coords) return;
+                
+                stopAllModes();
+                renderAllFeatures({ exclude: { targetArray, index } });
+                
+                const message = "頂点をドラッグして形状を編集します。";
+                startEditMode(null, message, null, featureData.coords, { targetArray, index });
+            }
+            
+            function onConfirmEdit() {
+                if (editMode.isEditing) {
+                    const { targetArray, index } = editMode.editContext;
+                    const newCoords = editMode.tempMarkers.map(m => [Math.round(m.getLatLng().lat), Math.round(m.getLatLng().lng)]);
+                    fictionalMapData[targetArray][index].coords = newCoords;
+                    stopEditMode();
+                    renderAllFeatures();
+                } else {
+                     if (editMode.points.length >= (editMode.type === 'region' ? 3 : 2)) {
+                        showEditModal(editMode.preset.targetArray, null, true, editMode.points, editMode.preset);
+                        stopEditMode();
+                    }
+                }
+            }
+
+            function startEditMode(groupKeyOrType, message, preset = {}, initialPoints = null, editContext = null) {
+                if (isViewMode || isMeasuring) return;
+                stopEditMode();
+
+                editMode.active = true;
+                editMode.isEditing = !!editContext;
+                editMode.editContext = editContext;
+
+                if (editMode.isEditing) {
+                    const feature = fictionalMapData[editContext.targetArray][editContext.index];
+                    editMode.type = feature.style ? 'region' : 'route'; // Infer shape type
+                    editMode.points = initialPoints ? [...initialPoints] : [];
+                } else {
+                    const modeConfig = featurePresets[groupKeyOrType];
+                    editMode.type = modeConfig.shape;
+                    editMode.preset = modeConfig;
+                    editMode.points = [];
+                }
+                editMode.tempMarkers = [];
+
+                if (initialPoints) {
+                    initialPoints.forEach(p => {
+                        const marker = L.marker(p, { 
+                            icon: L.divIcon({ className: 'edit-marker' }), 
+                            draggable: true 
+                        }).addTo(map);
+
+                        marker.on('drag', () => {
+                             const newPoints = editMode.tempMarkers.map(m => m.getLatLng());
+                             if(editMode.tempLayer) editMode.tempLayer.setLatLngs(newPoints);
+                        });
+                        editMode.tempMarkers.push(marker);
+                    });
+
+                    const style = { color: 'red', weight: 3, dashArray: '5, 5' };
+                    editMode.tempLayer = (editMode.type === 'region') 
+                        ? L.polygon(initialPoints, style).addTo(map) 
+                        : L.polyline(initialPoints, style).addTo(map);
+                }
+                
+                editStatusDiv.innerHTML = `<span id="edit-mode-message">${message}</span>
+                                           <div class="flex items-center space-x-2">
+                                             ${editMode.isEditing ? '' : '<button id="undo-btn" class="text-xs p-1 rounded bg-gray-300 hidden">戻る</button>'}
+                                             <button id="confirm-btn" class="text-xs p-1 rounded bg-blue-500 text-white font-bold">確定</button>
+                                             <button id="cancel-btn" class="text-xs p-1 rounded bg-red-500 text-white">キャンセル</button>
+                                           </div>`;
+                mapContainer.classList.add('cursor-crosshair');
+                editStatusDiv.classList.remove('hidden');
+                
+                if(!editMode.isEditing) map.on('click', onAddPointMapClick);
+                document.getElementById('confirm-btn').addEventListener('click', onConfirmEdit);
+                document.getElementById('cancel-btn').addEventListener('click', () => {
+                    stopEditMode();
+                    renderAllFeatures(); // Restore original state on cancel
+                });
+                if(document.getElementById('undo-btn')) document.getElementById('undo-btn').addEventListener('click', undoLastPoint);
+                document.addEventListener('keydown', handleKeydown);
+                if (!editMode.isEditing) map.on('mousemove', onAddPointMouseMove);
+            }
+            
+            function handleKeydown(e) {
+                if(e.key === 'Enter') onConfirmEdit();
+                if(e.key === 'Escape') {
+                    stopEditMode();
+                    renderAllFeatures();
+                }
+            }
+
+            function stopEditMode() {
+                if (!editMode.active) return;
+                map.off('click', onAddPointMapClick);
+                map.off('mousemove', onAddPointMouseMove);
+                
+                const confirmBtn = document.getElementById('confirm-btn');
+                if(confirmBtn) confirmBtn.removeEventListener('click', onConfirmEdit);
+                
+                const cancelBtn = document.getElementById('cancel-btn');
+                if(cancelBtn) cancelBtn.removeEventListener('click', stopEditMode);
+
+                const undoBtn = document.getElementById('undo-btn');
+                if(undoBtn) undoBtn.removeEventListener('click', undoLastPoint);
+
+                document.removeEventListener('keydown', handleKeydown);
+                
+                editMode.tempMarkers.forEach(m => m.remove());
+                if (editMode.tempLayer) editMode.tempLayer.remove();
+
+                editMode = { active: false, type: null, points: [], preset: {}, tempLayer: null, tempMarkers: [], isEditing: false, editContext: null };
+                editStatusDiv.classList.add('hidden');
+                mapContainer.classList.remove('cursor-crosshair');
+            }
+
+            function onAddPointMapClick(e) {
+                const coords = [Math.round(e.latlng.lat), Math.round(e.latlng.lng)];
+                if (editMode.type === 'place' || editMode.type === 'label') {
+                    const targetArray = editMode.type + 's';
+                    showEditModal(targetArray, null, true, coords, editMode.preset);
+                    stopEditMode();
+                } else {
+                    editMode.points.push(coords);
+                    const newMarker = L.marker(e.latlng, { icon: L.divIcon({ className: 'temp-marker' }) }).addTo(map);
+                    editMode.tempMarkers.push(newMarker);
+
+                    if(document.getElementById('undo-btn')) document.getElementById('undo-btn').classList.remove('hidden');
+
+                    if (editMode.points.length > 1) {
+                         if (!editMode.tempLayer) {
+                            const style = { color: 'red', weight: 3, dashArray: '5, 5' };
+                            editMode.tempLayer = (editMode.type === 'region') ? L.polygon(editMode.points, style).addTo(map) : L.polyline(editMode.points, style).addTo(map);
+                         } else {
+                            editMode.tempLayer.setLatLngs(editMode.points);
+                         }
+                    }
+                }
+            }
+            
+             function undoLastPoint() {
+                if(editMode.points.length > 0) {
+                    editMode.points.pop();
+                    const lastMarker = editMode.tempMarkers.pop();
+                    if(lastMarker) lastMarker.remove();
+                    if (editMode.tempLayer) editMode.tempLayer.setLatLngs(editMode.points);
+                    if(editMode.points.length === 0 && document.getElementById('undo-btn')) document.getElementById('undo-btn').classList.add('hidden');
+                }
+            }
+
+            function onAddPointMouseMove(e) {
+                if (!editMode.active || editMode.points.length === 0) return;
+                const previewCoords = [...editMode.points.map(p => L.latLng(p)), e.latlng];
+                if (editMode.tempLayer) {
+                    editMode.tempLayer.setLatLngs(previewCoords);
+                }
+            }
+            
+            // ==================================================================
+            // MEASUREMENT LOGIC
+            // ==================================================================
+            function startMeasureMode() {
+                stopAllModes();
+                isMeasuring = true;
+                mapContainer.classList.add('cursor-crosshair');
+                measureState.markers.addTo(map);
+                map.on('click', addMeasurePoint);
+                map.on('mousemove', onMeasureMouseMove);
+            }
+            function stopMeasureMode() {
+                if (!isMeasuring) return;
+                isMeasuring = false;
+                mapContainer.classList.remove('cursor-crosshair');
+                map.off('click', addMeasurePoint).off('mousemove', onMeasureMouseMove);
+                if (measureState.polyline) measureState.polyline.remove();
+                if (measureState.moveTooltip) measureState.moveTooltip.remove();
+                measureState.markers.clearLayers();
+                measureState = { points: [], polyline: null, markers: measureState.markers, totalDistance: 0, moveTooltip: null };
+            }
+            function addMeasurePoint(e) {
+                const latlng = e.latlng || e;
+                measureState.points.push(latlng);
+                let distStr = '';
+                if(measureState.points.length > 1) {
+                    const prevPoint = measureState.points[measureState.points.length - 2];
+                    measureState.totalDistance += map.options.crs.distance(prevPoint, latlng);
+                    distStr = formatDistance(measureState.totalDistance);
+                } else {
+                    distStr = formatDistance(0);
+                }
+                
+                L.circleMarker(latlng, { radius: 4, color: 'red' }).bindTooltip(distStr, {permanent: true, direction: 'right', offset: [10, 0]}).addTo(measureState.markers);
+                
+                if (!measureState.polyline) {
+                    measureState.polyline = L.polyline(measureState.points, {color: 'red', weight: 2, dashArray: '5, 5'}).addTo(map);
+                } else {
+                    measureState.polyline.setLatLngs(measureState.points);
+                }
+            }
+            function onMeasureMouseMove(e) {
+                if (measureState.points.length > 0) {
+                    const lastPoint = measureState.points[measureState.points.length - 1];
+                    const tempDistance = map.options.crs.distance(lastPoint, e.latlng);
+                    const distStr = `合計: ${formatDistance(measureState.totalDistance + tempDistance)}`;
+                    
+                    if (!measureState.moveTooltip) {
+                        measureState.moveTooltip = L.tooltip({permanent: true, className: 'measure-tooltip'}).setLatLng(e.latlng).setContent(distStr).addTo(map);
+                    } else {
+                        measureState.moveTooltip.setLatLng(e.latlng).setContent(distStr);
+                    }
+                    if(measureState.polyline) {
+                        measureState.polyline.setLatLngs([...measureState.points, e.latlng]);
+                    }
+                }
+            }
+            function formatDistance(meters) {
+                if (meters >= 1000) {
+                    return (meters / 1000).toFixed(2) + ' km';
+                }
+                return meters.toFixed(0) + ' m';
+            }
+
+            // ==================================================================
+            // DATA MANAGEMENT
+            // ==================================================================
+            const exportModal = document.getElementById('export-modal');
+            const exportTextarea = document.getElementById('export-textarea');
+            const importFileInput = document.getElementById('import-file-input');
+            
+            // --- Export Logic ---
+            document.getElementById('export-data-btn').onclick = () => {
+                const center = map.getCenter();
+                fictionalMapData.settings.center = [center.lat, center.lng];
+                fictionalMapData.settings.zoom = map.getZoom();
+
+                exportTextarea.value = JSON.stringify(fictionalMapData, null, 2); 
+                exportModal.classList.remove('hidden'); 
+            };
+            
+            document.getElementById('export-modal-save-btn').addEventListener('click', () => {
+                const dataStr = exportTextarea.value;
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'fictional-map.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            document.getElementById('export-modal-close-btn').onclick = () => exportModal.classList.add('hidden');
+            
+            // --- Import Logic ---
+            document.getElementById('import-data-btn').onclick = () => {
+                importFileInput.click();
+            };
+            
+            importFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) {
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    try {
+                        const importedData = JSON.parse(text);
+                        if (importedData.settings && importedData.regions && importedData.routes && importedData.places && importedData.labels) {
+                            fictionalMapData = importedData;
+                            map.setView(fictionalMapData.settings.center, fictionalMapData.settings.zoom);
+                            renderAllFeatures();
+                        } else { 
+                            alert('エラー: 無効なデータ形式です。必要なキーが不足しています。'); 
+                        }
+                    } catch (error) { 
+                        alert('エラー: JSONの解析に失敗しました。\n' + error.message); 
+                    }
+                };
+                reader.onerror = () => {
+                    alert('エラー: ファイルの読み込みに失敗しました。');
+                };
+                reader.readAsText(file);
+                
+                event.target.value = null;
+            });
+
+            // ==================================================================
+            // REAL MAP UI & SYNCHRONIZATION
+            // ==================================================================
+            const toggleRealMapCheckbox = document.getElementById('toggle-real-map');
+            let isSyncing = false;
+
+            // --- Sync Logic ---
+            function setupMapSync() {
+                const zoomOffset = realMap.getZoom() - map.getZoom();
+                let panStartLatLng;
+
+                map.on('movestart', function() {
+                    if (isSyncing) return;
+                    panStartLatLng = map.getCenter();
+                });
+                map.on('moveend', function() {
+                    if (isSyncing || !panStartLatLng) return;
+                    const panStartPoint = map.project(panStartLatLng);
+                    const panEndPoint = map.project(map.getCenter());
+                    const delta = panEndPoint.subtract(panStartPoint);
+                    if (delta.x !== 0 || delta.y !== 0) {
+                        isSyncing = true;
+                        realMap.panBy(delta, { animate: false });
+                        isSyncing = false;
+                    }
+                    panStartLatLng = null;
+                });
+                map.on('zoomend', function() {
+                    if (isSyncing) return;
+                    isSyncing = true;
+                    realMap.setZoom(map.getZoom() + zoomOffset, { animate: false });
+                    isSyncing = false;
+                });
+            }
+
+            // --- UI Controls ---
+            toggleRealMapCheckbox.addEventListener('change', function() {
+                realMapContainer.classList.toggle('hidden', !this.checked);
+                if (this.checked) {
+                    realMap.invalidateSize();
+                }
+            });
+
+
+            // ==================================================================
+            // INITIALIZATION
+            // ==================================================================
+            document.addEventListener('keydown', (e) => {
+                if (e.key === "Escape") {
+                    if (editMode.active) {
+                        stopEditMode();
+                        renderAllFeatures();
+                    }
+                    if(isMeasuring) stopMeasureMode();
+                    if(!exportModal.classList.contains('hidden')) exportModal.classList.add('hidden');
+                }
+            });
+            
+            document.getElementById('add-terrain-btn').onclick = () => startEditMode('terrain', '地形の頂点をクリックして作成します', featurePresets['terrain']);
+            document.getElementById('add-boundary-btn').onclick = () => startEditMode('boundary', '境界の点をクリックして作成します', featurePresets['boundary']);
+            document.getElementById('add-transport-btn').onclick = () => startEditMode('transport', '交通路の点をクリックして作成します', featurePresets['transport']);
+            document.getElementById('add-structure-btn').onclick = () => startEditMode('structure', '建物の頂点をクリックして作成します', featurePresets['structure']);
+            
+            document.getElementById('add-poi-btn').onclick = () => startEditMode('place', '場所を設置する地点をクリック', { targetArray: 'places' });
+            document.getElementById('add-label-btn').onclick = () => startEditMode('label', '地名を設置する地点をクリック', { targetArray: 'labels' });
+            
+            // Set initial state for real map overlay & start sync
+            realMapContainer.style.pointerEvents = 'none'; // Clicks pass through to the fictional map
+            realMapContainer.style.opacity = '0.5';
+            
+            setupMapSync();
+            renderAllFeatures();
+        });
+    </script>
+</body>
+</html>
