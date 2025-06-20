@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>インタラクティブ架空地図エディタ</title>
+    <title>MapMake架空地図エディタ</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -169,6 +169,9 @@
     </div>
 
     <div id="editor-panel" class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-sm p-2 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-[1000]">
+        <!-- Attribution Container -->
+        <div id="attribution-container" class="text-center text-xs text-gray-500 pb-2"></div>
+        
         <div id="editor-panel-content" class="flex items-center justify-start md:justify-center space-x-4 overflow-x-auto p-2">
             
             <div class="flex-shrink-0">
@@ -193,15 +196,15 @@
             </div>
             
              <div class="flex-shrink-0">
-                 <button id="export-data-btn" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-3 rounded-md text-sm">保存</button>
-                 <button id="import-data-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-3 rounded-md text-sm">読込</button>
+                  <button id="export-data-btn" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-3 rounded-md text-sm">保存</button>
+                  <button id="import-data-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-3 rounded-md text-sm">読込</button>
             </div>
 
             <div class="flex-shrink-0 border-l pl-4 ml-4 border-gray-300">
                 <div class="space-y-2">
                     <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 cursor-pointer">
                         <input type="checkbox" id="toggle-real-map" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                        <span>実在地図を重ねる</span>
+                        <span>実在地図を重ねる（β機能）</span>
                     </label>
                 </div>
             </div>
@@ -226,8 +229,8 @@
              <h3 class="text-lg font-bold mb-4">JSONエクスポート</h3>
              <textarea id="export-textarea" class="w-full flex-grow p-2 border rounded-md font-mono text-sm" readonly></textarea>
              <div class="mt-4 flex justify-end space-x-3">
-                <button id="export-modal-save-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">ファイルに保存</button>
-                <button id="export-modal-close-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">閉じる</button>
+                 <button id="export-modal-save-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">ファイルに保存</button>
+                 <button id="export-modal-close-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">閉じる</button>
             </div>
         </div>
     </div>
@@ -280,17 +283,10 @@
             const map = L.map('map', { 
                 crs: L.CRS.Simple, 
                 minZoom: -6, 
-                maxZoom: 5,
-                attributionControl: false // Disable default control
+                maxZoom: 2,
+                attributionControl: false 
             }); 
             map.setView(fictionalMapData.settings.center, fictionalMapData.settings.zoom); 
-
-            // Add custom attribution control to a new position
-            L.control.attribution({
-                position: 'bottomleft'
-            }).addTo(map);
-            map.attributionControl.addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors');
-
 
             // Real Map (for overlay)
             const realMapContainer = document.getElementById('real-map-container');
@@ -301,7 +297,7 @@
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
-                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright" target="_blank" class="text-blue-600 hover:underline">OpenStreetMap</a> contributors'
             }).addTo(realMap);
 
             const mapContainer = document.getElementById('map');
@@ -313,6 +309,7 @@
 
             let allLayers = L.layerGroup().addTo(map);
             const editorPanel = document.getElementById('editor-panel');
+            const editorPanelContent = document.getElementById('editor-panel-content');
             const contextMenu = document.getElementById('context-menu');
             let contextMenuLatLng = null;
 
@@ -364,9 +361,9 @@
                 for(let i = 0; i < units.length; i++) {
                     let currentUnit = units[i] * base;
                      if(meters >= currentUnit) {
-                        bestUnit = currentUnit;
+                         bestUnit = currentUnit;
                     } else {
-                        break;
+                         break;
                     }
                 }
                 return bestUnit;
@@ -381,10 +378,10 @@
                 const viewModeIcon = document.querySelector('#view-mode-btn .material-symbols-outlined');
                 if (isViewMode) {
                     stopAllModes();
-                    editorPanel.classList.add('hidden');
+                    editorPanelContent.classList.add('hidden');
                     viewModeIcon.textContent = 'edit';
                 } else {
-                    editorPanel.classList.remove('hidden');
+                    editorPanelContent.classList.remove('hidden');
                     viewModeIcon.textContent = 'visibility';
                 }
             }
@@ -522,8 +519,8 @@
                     formFields += `<div><label class="block text-sm font-medium text-gray-700">名前</label><input type="text" id="edit-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="${data.name || ''}"></div>`;
 
                     if (isNew) {
-                         let typeOptions = Object.entries(preset.options).map(([key, value]) => `<option value="${key}">${value}</option>`).join('');
-                         formFields += `<div><label class="block text-sm font-medium text-gray-700">種類</label><select id="edit-type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">${typeOptions}</select></div>`;
+                        let typeOptions = Object.entries(preset.options).map(([key, value]) => `<option value="${key}">${value}</option>`).join('');
+                        formFields += `<div><label class="block text-sm font-medium text-gray-700">種類</label><select id="edit-type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">${typeOptions}</select></div>`;
                     }
                 }
                 
@@ -597,8 +594,8 @@
                     renderAllFeatures();
                 } else {
                      if (editMode.points.length >= (editMode.type === 'region' ? 3 : 2)) {
-                        showEditModal(editMode.preset.targetArray, null, true, editMode.points, editMode.preset);
-                        stopEditMode();
+                         showEditModal(editMode.preset.targetArray, null, true, editMode.points, editMode.preset);
+                         stopEditMode();
                     }
                 }
             }
@@ -616,9 +613,18 @@
                     editMode.type = feature.style ? 'region' : 'route'; // Infer shape type
                     editMode.points = initialPoints ? [...initialPoints] : [];
                 } else {
-                    const modeConfig = featurePresets[groupKeyOrType];
-                    editMode.type = modeConfig.shape;
-                    editMode.preset = modeConfig;
+                    if (groupKeyOrType === 'place' || groupKeyOrType === 'label') {
+                        editMode.type = groupKeyOrType;
+                        editMode.preset = preset;
+                    } else {
+                        const modeConfig = featurePresets[groupKeyOrType];
+                        if (!modeConfig) {
+                            console.error(`Unknown feature type provided: ${groupKeyOrType}`);
+                            return;
+                        }
+                        editMode.type = modeConfig.shape;
+                        editMode.preset = modeConfig;
+                    }
                     editMode.points = [];
                 }
                 editMode.tempMarkers = [];
@@ -631,8 +637,8 @@
                         }).addTo(map);
 
                         marker.on('drag', () => {
-                             const newPoints = editMode.tempMarkers.map(m => m.getLatLng());
-                             if(editMode.tempLayer) editMode.tempLayer.setLatLngs(newPoints);
+                            const newPoints = editMode.tempMarkers.map(m => m.getLatLng());
+                            if(editMode.tempLayer) editMode.tempLayer.setLatLngs(newPoints);
                         });
                         editMode.tempMarkers.push(marker);
                     });
@@ -643,15 +649,16 @@
                         : L.polyline(initialPoints, style).addTo(map);
                 }
                 
-                editStatusDiv.innerHTML = `<span id="edit-mode-message">${message}</span>
-                                           <div class="flex items-center space-x-2">
-                                             ${editMode.isEditing ? '' : '<button id="undo-btn" class="text-xs p-1 rounded bg-gray-300 hidden">戻る</button>'}
-                                             <button id="confirm-btn" class="text-xs p-1 rounded bg-blue-500 text-white font-bold">確定</button>
-                                             <button id="cancel-btn" class="text-xs p-1 rounded bg-red-500 text-white">キャンセル</button>
-                                           </div>`;
-                mapContainer.classList.add('cursor-crosshair');
+                editStatusDiv.innerHTML = `<span id="edit-mode-message" class="flex-grow text-center">${message}</span>
+                                            <div class="flex items-center space-x-2 flex-shrink-0">
+                                                ${editMode.isEditing ? '' : '<button id="undo-btn" class="text-xs py-1 px-2 rounded bg-gray-300 hover:bg-gray-400 hidden">戻る</button>'}
+                                                <button id="confirm-btn" class="text-xs py-1 px-2 rounded bg-blue-500 text-white font-bold hover:bg-blue-600">確定</button>
+                                                <button id="cancel-btn" class="text-xs py-1 px-2 rounded bg-red-500 text-white hover:bg-red-600">キャンセル</button>
+                                            </div>`;
+
+                editStatusDiv.classList.add('flex', 'justify-between', 'items-center');
                 editStatusDiv.classList.remove('hidden');
-                
+
                 if(!editMode.isEditing) map.on('click', onAddPointMapClick);
                 document.getElementById('confirm-btn').addEventListener('click', onConfirmEdit);
                 document.getElementById('cancel-btn').addEventListener('click', () => {
@@ -692,6 +699,7 @@
 
                 editMode = { active: false, type: null, points: [], preset: {}, tempLayer: null, tempMarkers: [], isEditing: false, editContext: null };
                 editStatusDiv.classList.add('hidden');
+                editStatusDiv.classList.remove('flex', 'justify-between', 'items-center');
                 mapContainer.classList.remove('cursor-crosshair');
             }
 
@@ -720,14 +728,14 @@
             }
             
              function undoLastPoint() {
-                if(editMode.points.length > 0) {
-                    editMode.points.pop();
-                    const lastMarker = editMode.tempMarkers.pop();
-                    if(lastMarker) lastMarker.remove();
-                    if (editMode.tempLayer) editMode.tempLayer.setLatLngs(editMode.points);
-                    if(editMode.points.length === 0 && document.getElementById('undo-btn')) document.getElementById('undo-btn').classList.add('hidden');
-                }
-            }
+                 if(editMode.points.length > 0) {
+                     editMode.points.pop();
+                     const lastMarker = editMode.tempMarkers.pop();
+                     if(lastMarker) lastMarker.remove();
+                     if (editMode.tempLayer) editMode.tempLayer.setLatLngs(editMode.points);
+                     if(editMode.points.length === 0 && document.getElementById('undo-btn')) document.getElementById('undo-btn').classList.add('hidden');
+                 }
+             }
 
             function onAddPointMouseMove(e) {
                 if (!editMode.active || editMode.points.length === 0) return;
@@ -908,6 +916,14 @@
                 realMapContainer.classList.toggle('hidden', !this.checked);
                 if (this.checked) {
                     realMap.invalidateSize();
+                    map.options.minZoom = -2;
+                } else {
+                    map.options.minZoom = -6;
+                }
+
+                // 現在のズームレベルが新しい最小ズームレベルより小さい場合は調整
+                if (map.getZoom() < map.options.minZoom) {
+                    map.setZoom(map.options.minZoom);
                 }
             });
 
@@ -915,6 +931,8 @@
             // ==================================================================
             // INITIALIZATION
             // ==================================================================
+            document.getElementById('attribution-container').innerHTML = `<a href="https://leafletjs.com" title="A JS library for interactive maps" target="_blank" class="text-blue-600 hover:underline">Leaflet</a> | &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" class="text-blue-600 hover:underline">OpenStreetMap</a> contributors`;
+            
             document.addEventListener('keydown', (e) => {
                 if (e.key === "Escape") {
                     if (editMode.active) {
@@ -935,7 +953,7 @@
             document.getElementById('add-label-btn').onclick = () => startEditMode('label', '地名を設置する地点をクリック', { targetArray: 'labels' });
             
             // Set initial state for real map overlay & start sync
-            realMapContainer.style.pointerEvents = 'none'; // Clicks pass through to the fictional map
+            realMapContainer.style.pointerEvents = 'none';
             realMapContainer.style.opacity = '0.5';
             
             setupMapSync();
