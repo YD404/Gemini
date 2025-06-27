@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>天気予報アプリの小道具</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
+    <!-- Google Fonts for Material Symbols (Weather Icons) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        /* Apply Inter font as the default */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10+ */
+            user-select: none; /* Standard syntax */
+        }
+        /* Style for weather icons */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 48;
+            font-size: 28px;
+        }
+        /* Custom scrollbar for horizontal forecast */
+        .hourly-forecast::-webkit-scrollbar { height: 4px; }
+        .hourly-forecast::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); }
+        .hourly-forecast::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.4); border-radius: 2px; }
+        /* Custom scrollbar for modal */
+        #modal-content::-webkit-scrollbar { width: 6px; }
+        #modal-content::-webkit-scrollbar-track { background: #2d3748; }
+        #modal-content::-webkit-scrollbar-thumb { background: #718096; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-black">
+
+    <!-- Weather App UI Container -->
+    <div id="weather-app-container" class="w-full h-screen text-white flex flex-col p-6 overflow-hidden transition-colors duration-300">
+        <!-- Current Weather Section -->
+        <div id="current-weather" class="text-center flex-shrink-0 pt-8">
+            <h1 id="app-city" class="text-3xl font-light editable" data-edit-type="city">横浜市</h1>
+            <p id="app-current-condition" class="text-xl font-light editable" data-edit-type="current-condition">時々雨</p>
+            <div class="flex items-start justify-center editable rounded-lg p-2 transition-colors" data-edit-type="background">
+               <span id="app-current-temp" class="text-8xl font-thin tracking-tighter">24</span>
+               <span class="text-4xl font-thin mt-4">°</span>
+            </div>
+        </div>
+
+        <!-- Today's Hourly Forecast -->
+        <div id="today-details" class="mt-6 pt-6 border-t border-white/20 flex-shrink-0 editable rounded-lg p-2 -mx-2 transition-colors duration-300" data-edit-type="forecast" data-index="0">
+             <div class="hourly-forecast flex justify-between overflow-x-auto pb-3">
+                <!-- Hourly items will be generated here -->
+             </div>
+        </div>
+
+
+        <!-- Weekly Forecast Section -->
+        <div id="weekly-forecast" class="mt-4 pt-4 border-t border-white/20 flex-grow overflow-y-auto">
+            <ul id="forecast-list" class="space-y-3">
+                <!-- Weekly forecast items will be generated here -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-gray-800 rounded-2xl flex flex-col p-6 shadow-lg w-full max-w-xs text-white h-auto">
+            <h3 id="modal-title" class="text-xl font-bold mb-4 flex-shrink-0">設定の変更</h3>
+            <div id="modal-content" class="space-y-4 flex-grow overflow-y-auto pr-2 max-h-[60vh]">
+                <!-- Modal form fields will be injected here -->
+            </div>
+            <div class="flex justify-end space-x-3 mt-6 flex-shrink-0">
+                <button id="modal-cancel" class="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500 transition-colors">キャンセル</button>
+                <button id="modal-save" class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition-colors">保存</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA ---
+            const weatherIconMap = {
+                'sunny': { label: '晴れ', icon: 'sunny' },
+                'clear_night': { label: '快晴（夜）', icon: 'clear_night' },
+                'cloudy': { label: 'くもり', icon: 'cloud' },
+                'partly_cloudy_day': { label: '晴時々くもり', icon: 'partly_cloudy_day' },
+                'rainy': { label: '雨', icon: 'rainy' },
+                'snowing': { label: '雪', icon: 'cloudy_snowing' },
+                'thunderstorm': { label: '雷雨', icon: 'thunderstorm' },
+                'foggy': { label: '霧', icon: 'foggy' }
+            };
+            const weekDays = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
+
+            let appState = {
+                city: '横浜市',
+                current: { condition: '時々雨' },
+                backgroundColor: '#4c7ca0',
+                startDay: 5, // 0:日, 1:月... 5:金
+                forecast: [
+                    { high: 24, low: 22, condition: 'rainy', hourly: [
+                        { time: '現在', icon: 'rainy', temp: 24 }, { time: '15時', icon: 'rainy', temp: 24 },
+                        { time: '16時', icon: 'rainy', temp: 23 }, { time: '17時', icon: 'rainy', temp: 23 },
+                        { time: '18時', icon: 'partly_cloudy_day', temp: 23 }, { time: '19時', icon: 'clear_night', temp: 22 },
+                    ]},
+                    { high: 27, low: 21, condition: 'rainy' }, { high: 25, low: 18, condition: 'rainy' },
+                    { high: 26, low: 21, condition: 'partly_cloudy_day' }, { high: 26, low: 21, condition: 'rainy' },
+                    { high: 26, low: 22, condition: 'rainy' }, { high: 29, low: 23, condition: 'rainy' },
+                    { high: 29, low: 23, condition: 'partly_cloudy_day' },
+                ]
+            };
+            
+            // --- DOM ELEMENTS ---
+            const appContainer = document.getElementById('weather-app-container');
+            const appCity = document.getElementById('app-city');
+            const appCurrentCondition = document.getElementById('app-current-condition');
+            const appCurrentTemp = document.getElementById('app-current-temp');
+            const hourlyForecastContainer = document.querySelector('.hourly-forecast');
+            const forecastList = document.getElementById('forecast-list');
+            const modal = document.getElementById('settings-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+            const modalCancel = document.getElementById('modal-cancel');
+            const modalSave = document.getElementById('modal-save');
+            
+            let currentEditInfo = {};
+            let pressTimer;
+
+            // --- RENDER FUNCTIONS ---
+            function renderApp() {
+                // Render background with a solid color
+                appContainer.style.backgroundColor = appState.backgroundColor;
+                
+                // Render current weather text
+                appCity.textContent = appState.city;
+                appCurrentCondition.textContent = appState.current.condition;
+                appCurrentTemp.textContent = appState.forecast[0].hourly[0].temp;
+
+                // Render today's hourly forecast
+                hourlyForecastContainer.innerHTML = '';
+                appState.forecast[0].hourly.forEach(hour => {
+                    const condition = weatherIconMap[hour.icon] || weatherIconMap['cloudy'];
+                    const hourEl = document.createElement('div');
+                    hourEl.className = 'flex flex-col items-center space-y-2 flex-shrink-0';
+                    hourEl.innerHTML = `
+                        <span class="text-sm font-light opacity-80">${hour.time}</span>
+                        <i class="material-symbols-outlined !text-2xl">${condition.icon}</i>
+                        <span class="text-lg">${hour.temp}°</span>
+                    `;
+                    hourlyForecastContainer.appendChild(hourEl);
+                });
+
+                // Render weekly forecast
+                forecastList.innerHTML = ''; 
+                appState.forecast.forEach((dayData, index) => {
+                    if (index > 0) {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'flex justify-between items-center text-lg font-light editable rounded-lg p-2 transition-colors duration-300';
+                        listItem.dataset.editType = 'forecast';
+                        listItem.dataset.index = index;
+                        
+                        const dayName = (index === 1) ? "明日" : weekDays[(appState.startDay + index) % 7];
+                        const condition = weatherIconMap[dayData.condition] || weatherIconMap['cloudy'];
+
+                        listItem.innerHTML = `
+                            <span class="w-1/3">${dayName}</span>
+                            <span class="w-1/3 text-center">
+                                <i class="material-symbols-outlined">${condition.icon}</i>
+                            </span>
+                            <div class="w-1/3 flex justify-end space-x-4">
+                                <span>${dayData.high}°</span>
+                                <span class="opacity-60">${dayData.low}°</span>
+                            </div>
+                        `;
+                        forecastList.appendChild(listItem);
+                    }
+                });
+                
+                addEditListeners();
+            }
+            
+            // --- MODAL & EDITING FUNCTIONS ---
+            function openModal(type, index = null) {
+                currentEditInfo = { type, index: index !== null ? parseInt(index, 10) : null };
+                modalContent.innerHTML = '';
+
+                const weatherOptions = Object.keys(weatherIconMap).map(key => 
+                    `<option value="${key}">${weatherIconMap[key].label}</option>`
+                ).join('');
+
+                switch(type) {
+                    case 'city':
+                        modalTitle.textContent = '都市名の変更';
+                        modalContent.innerHTML = `<input type="text" id="edit-input" value="${appState.city}" class="w-full bg-gray-700 text-white border border-gray-500 rounded-md p-2">`;
+                        break;
+                    case 'current-condition':
+                        modalTitle.textContent = '現在の天気の変更';
+                        modalContent.innerHTML = `<input type="text" id="edit-input" value="${appState.current.condition}" class="w-full bg-gray-700 text-white border border-gray-500 rounded-md p-2">`;
+                        break;
+                    case 'background':
+                        modalTitle.textContent = '背景色の変更';
+                        const colors = ['#369AD9', '#4c7ca0', '#8A9BA8', '#111827'];
+                        modalContent.innerHTML = `<div class="flex space-x-4">${colors.map(color => `
+                            <div class="w-12 h-12 rounded-full cursor-pointer border-2 ${appState.backgroundColor === color ? 'border-white' : 'border-transparent'}" style="background-color: ${color};" data-color="${color}"></div>
+                        `).join('')}</div>`;
+                        
+                        modalContent.querySelectorAll('[data-color]').forEach(swatch => {
+                            swatch.addEventListener('click', () => {
+                                modalContent.querySelector('.border-white')?.classList.replace('border-white', 'border-transparent');
+                                swatch.classList.replace('border-transparent', 'border-white');
+                            });
+                        });
+                        break;
+                    case 'forecast':
+                        const dayData = appState.forecast[currentEditInfo.index];
+                        const dayName = currentEditInfo.index === 0 ? "今日" : (currentEditInfo.index === 1 ? "明日" : weekDays[(appState.startDay + currentEditInfo.index) % 7]);
+                        modalTitle.textContent = `${dayName}の編集`;
+                        
+                        let daySelector = '';
+                        if (currentEditInfo.index === 0) {
+                            const dayOptions = weekDays.map((day, i) => `<option value="${i}" ${appState.startDay === i ? 'selected' : ''}>${day}</option>`).join('');
+                            daySelector = `<div><label class="text-sm">曜日</label><select id="edit-day" class="w-full bg-gray-700 text-white border border-gray-500 rounded p-1.5 mt-1 text-sm">${dayOptions}</select></div>`;
+                        }
+                        
+                        let hourlyEditor = '';
+                        if (currentEditInfo.index === 0) {
+                            hourlyEditor = '<h4 class="text-md font-semibold mt-4 pt-4 border-t border-gray-600">時間ごとの設定</h4>';
+                            dayData.hourly.forEach((hour, i) => {
+                                const hourlyWeatherOpts = Object.keys(weatherIconMap).map(key => `<option value="${key}" ${hour.icon === key ? 'selected' : ''}>${weatherIconMap[key].label}</option>`).join('');
+                                hourlyEditor += `<div class="p-2 bg-gray-900/50 rounded-md mt-2"><div class="grid grid-cols-2 gap-x-3 gap-y-2">
+                                    <div class="col-span-2"><label class="text-xs">時刻</label><input type="text" value="${hour.time}" data-hour-index="${i}" data-prop="time" class="w-full bg-gray-600 text-white border-gray-500 rounded p-1 text-xs"></div>
+                                    <div><label class="text-xs">天気</label><select data-hour-index="${i}" data-prop="icon" class="w-full bg-gray-600 text-white border-gray-500 rounded p-1 text-xs">${hourlyWeatherOpts}</select></div>
+                                    <div><label class="text-xs">気温</label><input type="number" value="${hour.temp}" data-hour-index="${i}" data-prop="temp" class="w-full bg-gray-600 text-white border-gray-500 rounded p-1 text-xs"></div>
+                                  </div></div>`;
+                            });
+                        }
+
+                        modalContent.innerHTML = `${daySelector}
+                            <div><label class="text-sm">天気</label><select id="edit-condition" class="w-full bg-gray-700 text-white border border-gray-500 rounded p-1.5 mt-1 text-sm">${weatherOptions}</select></div>
+                            <div class="grid grid-cols-2 gap-2">
+                            <div><label class="text-sm">最高(°)</label><input type="number" id="edit-high" value="${dayData.high}" class="w-full bg-gray-700 text-white border border-gray-500 rounded p-1.5 mt-1 text-sm"></div>
+                            <div><label class="text-sm">最低(°)</label><input type="number" id="edit-low" value="${dayData.low}" class="w-full bg-gray-700 text-white border border-gray-500 rounded p-1.5 mt-1 text-sm"></div>
+                            </div>${hourlyEditor}`;
+                        document.getElementById('edit-condition').value = dayData.condition;
+
+                        if (currentEditInfo.index === 0) {
+                            const timeInputs = modalContent.querySelectorAll('[data-prop="time"]');
+                            timeInputs[0].disabled = true;
+                            const startHourInput = timeInputs[1];
+                            
+                            startHourInput.addEventListener('input', () => {
+                                const startHour = parseInt(startHourInput.value.replace('時', ''));
+                                if (!isNaN(startHour)) {
+                                    for(let i = 2; i < timeInputs.length; i++) {
+                                        timeInputs[i].value = `${(startHour + i - 1) % 24}時`;
+                                    }
+                                }
+                            });
+                        }
+                        break;
+                }
+                modal.classList.remove('hidden');
+            }
+
+            function saveChanges() {
+                const { type, index } = currentEditInfo;
+                switch(type) {
+                    case 'city':
+                        appState.city = document.getElementById('edit-input').value;
+                        break;
+                    case 'current-condition':
+                        appState.current.condition = document.getElementById('edit-input').value;
+                        break;
+                    case 'background':
+                        const selectedSwatch = modalContent.querySelector('.border-white');
+                        if (selectedSwatch) {
+                            appState.backgroundColor = selectedSwatch.dataset.color;
+                        }
+                        break;
+                    case 'forecast':
+                        if (index === 0) {
+                             appState.startDay = parseInt(document.getElementById('edit-day').value) || 0;
+                             appState.forecast[0].hourly.forEach((_, i) => {
+                                appState.forecast[0].hourly[i].time = modalContent.querySelector(`[data-hour-index="${i}"][data-prop="time"]`).value;
+                                appState.forecast[0].hourly[i].icon = modalContent.querySelector(`[data-hour-index="${i}"][data-prop="icon"]`).value;
+                                appState.forecast[0].hourly[i].temp = parseInt(modalContent.querySelector(`[data-hour-index="${i}"][data-prop="temp"]`).value) || 0;
+                             });
+                        }
+                        appState.forecast[index].condition = document.getElementById('edit-condition').value;
+                        appState.forecast[index].high = parseInt(document.getElementById('edit-high').value) || 0;
+                        appState.forecast[index].low = parseInt(document.getElementById('edit-low').value) || 0;
+                        break;
+                }
+                renderApp();
+                closeModal();
+            }
+
+            function closeModal() { modal.classList.add('hidden'); }
+            
+            function handlePressStart(e) {
+                e.preventDefault();
+                const target = e.currentTarget;
+                target.classList.add('bg-white/10');
+                pressTimer = window.setTimeout(() => { openModal(target.dataset.editType, target.dataset.index); }, 800);
+            }
+            function handlePressEnd(e) {
+                e.preventDefault();
+                e.currentTarget.classList.remove('bg-white/10');
+                clearTimeout(pressTimer);
+            }
+            function addEditListeners() {
+                document.querySelectorAll('.editable').forEach(el => {
+                    el.removeEventListener('mousedown', handlePressStart); el.removeEventListener('mouseup', handlePressEnd);
+                    el.removeEventListener('mouseleave', handlePressEnd); el.removeEventListener('touchstart', handlePressStart);
+                    el.removeEventListener('touchend', handlePressEnd);
+                    el.addEventListener('mousedown', handlePressStart); el.addEventListener('mouseup', handlePressEnd);
+                    el.addEventListener('mouseleave', handlePressEnd);
+                    el.addEventListener('touchstart', handlePressStart, { passive: false });
+                    el.addEventListener('touchend', handlePressEnd);
+                });
+            }
+
+            modalSave.addEventListener('click', saveChanges);
+            modalCancel.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            renderApp();
+        });
+    </script>
+</body>
+</html>
