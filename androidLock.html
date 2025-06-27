@@ -269,6 +269,10 @@
                 <label for="date-picker">Set Date (Temporary):</label>
                 <input type="date" id="date-picker">
             </div>
+            <div class="form-group">
+                <label for="time-picker">Set Time (Temporary):</label>
+                <input type="time" id="time-picker">
+            </div>
             <button id="save-settings">Save & Close</button>
         </div>
     </div>
@@ -284,34 +288,41 @@
                   homeScreen = document.getElementById('home-screen'),
                   unlockHandle = document.getElementById('unlock-handle');
             
-            let dateUpdaterInterval, originalDateUpdater;
+            let timeUpdateInterval, dateUpdateInterval;
             
-            function updateTime() {
-                const now = new Date();
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
+            // 時刻を更新する（手動設定も可能）
+            function updateTime(manualTime = null) {
+                const hours = manualTime ? manualTime.split(':')[0] : String(new Date().getHours()).padStart(2, '0');
+                const minutes = manualTime ? manualTime.split(':')[1] : String(new Date().getMinutes()).padStart(2, '0');
                 clockJB.textContent = `${hours}:${minutes}`;
                 a10Hours.textContent = hours;
                 a10Minutes.textContent = minutes;
             }
 
-            function updateDate() {
-                const now = new Date();
+            // 日付を更新する（手動設定も可能）
+            function updateDate(manualDate = null) {
+                const now = manualDate ? new Date(manualDate + 'T00:00:00') : new Date();
                 const options = { weekday: 'short', month: 'short', day: 'numeric' };
                 const dateString = now.toLocaleDateString(undefined, options);
                 dateJB.textContent = dateString.toUpperCase();
                 dateA10.textContent = dateString;
             }
-            originalDateUpdater = updateDate;
 
-            function startNormalUpdates() {
-                updateTime();
-                setInterval(updateTime, 1000);
-                if (dateUpdaterInterval) clearInterval(dateUpdaterInterval);
-                originalDateUpdater();
-                dateUpdaterInterval = setInterval(originalDateUpdater, 60000);
+            // 時刻の自動更新を開始
+            function startTimeUpdates() {
+                if (timeUpdateInterval) clearInterval(timeUpdateInterval);
+                timeUpdateInterval = setInterval(() => updateTime(), 1000);
             }
-            startNormalUpdates();
+            // 日付の自動更新を開始
+            function startDateUpdates() {
+                 if (dateUpdateInterval) clearInterval(dateUpdateInterval);
+                dateUpdateInterval = setInterval(() => updateDate(), 60000);
+            }
+
+            startTimeUpdates();
+            startDateUpdates();
+            updateTime();
+            updateDate();
 
             // --- アンロック共通ロジック ---
             let autoLockTimer = null;
@@ -332,77 +343,33 @@
             let isJbDragging = false, jbStartX, jbStartY;
             const jbRingRadius = 90;
             let isA10Swiping = false, a10StartY;
-            const a10SwipeThreshold = -100; // 上に100pxスワイプで解除
+            const a10SwipeThreshold = -100;
 
-            // Jelly Bean: ドラッグ処理
-            function jbStartDrag(e) {
-                isJbDragging = true;
-                unlockHandle.style.transition = 'none';
-                const event = e.type.includes('mouse') ? e : e.touches[0];
-                jbStartX = event.clientX;
-                jbStartY = event.clientY;
-            }
-            function jbOnDrag(e) {
-                if (!isJbDragging) return;
-                const event = e.type.includes('mouse') ? e : e.touches[0];
-                const deltaX = event.clientX - jbStartX, deltaY = event.clientY - jbStartY;
-                unlockHandle.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                if (Math.sqrt(deltaX * deltaX + deltaY * deltaY) > jbRingRadius) {
-                    unlockScreen();
-                    jbEndDrag();
-                }
-            }
-            function jbEndDrag() {
-                if (!isJbDragging) return;
-                isJbDragging = false;
-                unlockHandle.style.transition = 'transform 0.2s ease-out';
-                unlockHandle.style.transform = 'translate(0, 0)';
-            }
-            
-            // Android 10: スワイプ処理
-            function a10StartSwipe(e) {
-                isA10Swiping = true;
-                const event = e.type.includes('mouse') ? e : e.touches[0];
-                a10StartY = event.clientY;
-            }
-            function a10EndSwipe(e) {
-                if (!isA10Swiping) return;
-                isA10Swiping = false;
-                const event = e.type.includes('mouse') ? e : e.changedTouches[0];
-                const deltaY = event.clientY - a10StartY;
-                if (deltaY < a10SwipeThreshold) {
-                    unlockScreen();
-                }
-            }
+            function jbStartDrag(e) { /* ... */ }
+            function jbOnDrag(e) { /* ... */ }
+            function jbEndDrag() { /* ... */ }
+            function a10StartSwipe(e) { /* ... */ }
+            function a10EndSwipe(e) { /* ... */ }
+            // 省略（前回のコードと同じ）
+            function jbStartDrag(e) { isJbDragging = true; unlockHandle.style.transition = 'none'; const event = e.type.includes('mouse') ? e : e.touches[0]; jbStartX = event.clientX; jbStartY = event.clientY; }
+            function jbOnDrag(e) { if (!isJbDragging) return; const event = e.type.includes('mouse') ? e : e.touches[0]; const deltaX = event.clientX - jbStartX, deltaY = event.clientY - jbStartY; unlockHandle.style.transform = `translate(${deltaX}px, ${deltaY}px)`; if (Math.sqrt(deltaX * deltaX + deltaY * deltaY) > jbRingRadius) { unlockScreen(); jbEndDrag(); } }
+            function jbEndDrag() { if (!isJbDragging) return; isJbDragging = false; unlockHandle.style.transition = 'transform 0.2s ease-out'; unlockHandle.style.transform = 'translate(0, 0)'; }
+            function a10StartSwipe(e) { isA10Swiping = true; const event = e.type.includes('mouse') ? e : e.touches[0]; a10StartY = event.clientY; }
+            function a10EndSwipe(e) { if (!isA10Swiping) return; isA10Swiping = false; const event = e.type.includes('mouse') ? e : e.changedTouches[0]; const deltaY = event.clientY - a10StartY; if (deltaY < a10SwipeThreshold) { unlockScreen(); } }
 
-            // イベントリスナーの管理
+
             function setupUnlockListeners() {
-                // Jelly Beanのリスナーを一度すべて削除
-                unlockHandle.removeEventListener('mousedown', jbStartDrag);
-                document.removeEventListener('mousemove', jbOnDrag);
-                document.removeEventListener('mouseup', jbEndDrag);
-                unlockHandle.removeEventListener('touchstart', jbStartDrag);
-                document.removeEventListener('touchmove', jbOnDrag);
-                document.removeEventListener('touchend', jbEndDrag);
-
-                // Android 10のリスナーを一度すべて削除
-                lockscreenContainer.removeEventListener('mousedown', a10StartSwipe);
-                lockscreenContainer.removeEventListener('mouseup', a10EndSwipe);
-                lockscreenContainer.removeEventListener('touchstart', a10StartSwipe);
-                lockscreenContainer.removeEventListener('touchend', a10EndSwipe);
+                unlockHandle.removeEventListener('mousedown', jbStartDrag); document.removeEventListener('mousemove', jbOnDrag); document.removeEventListener('mouseup', jbEndDrag);
+                unlockHandle.removeEventListener('touchstart', jbStartDrag); document.removeEventListener('touchmove', jbOnDrag); document.removeEventListener('touchend', jbEndDrag);
+                lockscreenContainer.removeEventListener('mousedown', a10StartSwipe); lockscreenContainer.removeEventListener('mouseup', a10EndSwipe);
+                lockscreenContainer.removeEventListener('touchstart', a10StartSwipe); lockscreenContainer.removeEventListener('touchend', a10EndSwipe);
                 
                 if (currentLockStyle === 'jellybean') {
-                    unlockHandle.addEventListener('mousedown', jbStartDrag);
-                    document.addEventListener('mousemove', jbOnDrag);
-                    document.addEventListener('mouseup', jbEndDrag);
-                    unlockHandle.addEventListener('touchstart', jbStartDrag, { passive: false });
-                    document.addEventListener('touchmove', jbOnDrag, { passive: false });
-                    document.addEventListener('touchend', jbEndDrag);
-                } else { // android10
-                    lockscreenContainer.addEventListener('mousedown', a10StartSwipe);
-                    lockscreenContainer.addEventListener('mouseup', a10EndSwipe);
-                    lockscreenContainer.addEventListener('touchstart', a10StartSwipe, { passive: true });
-                    lockscreenContainer.addEventListener('touchend', a10EndSwipe);
+                    unlockHandle.addEventListener('mousedown', jbStartDrag); document.addEventListener('mousemove', jbOnDrag); document.addEventListener('mouseup', jbEndDrag);
+                    unlockHandle.addEventListener('touchstart', jbStartDrag, { passive: false }); document.addEventListener('touchmove', jbOnDrag, { passive: false }); document.addEventListener('touchend', jbEndDrag);
+                } else {
+                    lockscreenContainer.addEventListener('mousedown', a10StartSwipe); lockscreenContainer.addEventListener('mouseup', a10EndSwipe);
+                    lockscreenContainer.addEventListener('touchstart', a10StartSwipe, { passive: true }); lockscreenContainer.addEventListener('touchend', a10EndSwipe);
                 }
             }
             setupUnlockListeners();
@@ -415,7 +382,8 @@
                   stylePicker = document.getElementById('lockscreen-style-picker'),
                   bgColorPicker = document.getElementById('bg-color-picker'),
                   bgImagePicker = document.getElementById('bg-image-picker'),
-                  datePicker = document.getElementById('date-picker');
+                  datePicker = document.getElementById('date-picker'),
+                  timePicker = document.getElementById('time-picker');
 
             let longPressTimer = null, longPressDuration = 1000, selectedFile = null;
 
@@ -423,10 +391,7 @@
                 if(e.target.files && e.target.files[0]) selectedFile = e.target.files[0];
             });
 
-            function handlePressStart() {
-                if (isJbDragging) return;
-                longPressTimer = setTimeout(openSettingsModal, longPressDuration);
-            }
+            function handlePressStart() { if (isJbDragging || isA10Swiping) return; longPressTimer = setTimeout(openSettingsModal, longPressDuration); }
             function handlePressEnd() { clearTimeout(longPressTimer); }
             clockContainers.forEach(container => {
                 container.addEventListener('mousedown', handlePressStart);
@@ -439,7 +404,8 @@
             function openSettingsModal() {
                 const currentBgColor = getComputedStyle(lockscreenContainer).backgroundColor;
                 bgColorPicker.value = rgbToHex(currentBgColor);
-                datePicker.value = ''; bgImagePicker.value = ''; selectedFile = null;
+                datePicker.value = ''; timePicker.value = '';
+                bgImagePicker.value = ''; selectedFile = null;
                 stylePicker.value = currentLockStyle;
                 settingsModal.style.display = 'flex';
             }
@@ -447,40 +413,45 @@
             function closeSettingsModal() { settingsModal.style.display = 'none'; }
             
             function saveSettings() {
-                // スタイル設定
                 currentLockStyle = stylePicker.value;
                 lockscreenContainer.className = `background-container style-${currentLockStyle}`;
-                setupUnlockListeners(); // スタイル変更に応じてリスナーを再設定
+                setupUnlockListeners();
 
-                // 背景設定
                 if (selectedFile) {
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                        const imageUrl = e.target.result, backgroundStyle = `url(${imageUrl})`;
-                        lockscreenContainer.style.backgroundImage = backgroundStyle;
-                        homeScreen.style.backgroundImage = backgroundStyle;
-                        lockscreenContainer.style.backgroundColor = '';
-                        homeScreen.style.backgroundColor = '';
+                        const imageUrl = e.target.result;
+                        const backgroundStyle = `url(${imageUrl})`;
+                        lockscreenContainer.style.backgroundImage = homeScreen.style.backgroundImage = backgroundStyle;
+                        lockscreenContainer.style.backgroundColor = homeScreen.style.backgroundColor = '';
                         lockscreenContainer.classList.add('has-image');
                     };
                     reader.readAsDataURL(selectedFile);
                 } else {
                     const color = bgColorPicker.value;
-                    lockscreenContainer.style.backgroundColor = color;
-                    homeScreen.style.backgroundColor = color;
-                    lockscreenContainer.style.backgroundImage = 'none';
-                    homeScreen.style.backgroundImage = 'none';
+                    lockscreenContainer.style.backgroundColor = homeScreen.style.backgroundColor = color;
+                    lockscreenContainer.style.backgroundImage = homeScreen.style.backgroundImage = 'none';
                     lockscreenContainer.classList.remove('has-image');
                 }
 
                 // 日付設定
                 if (datePicker.value) {
-                    if (dateUpdaterInterval) clearInterval(dateUpdaterInterval);
-                    const selectedDate = new Date(datePicker.value + 'T00:00:00');
-                    const options = { weekday: 'short', month: 'short', day: 'numeric' };
-                    const dateString = selectedDate.toLocaleDateString(undefined, options);
-                    dateJB.textContent = dateString.toUpperCase(); dateA10.textContent = dateString;
-                } else { startNormalUpdates(); }
+                    if (dateUpdateInterval) clearInterval(dateUpdateInterval);
+                    updateDate(datePicker.value);
+                } else {
+                    startDateUpdates();
+                    updateDate();
+                }
+
+                // 時刻設定
+                if(timePicker.value) {
+                    if (timeUpdateInterval) clearInterval(timeUpdateInterval);
+                    updateTime(timePicker.value);
+                } else {
+                    startTimeUpdates();
+                    updateTime();
+                }
+
                 closeSettingsModal();
             }
             
