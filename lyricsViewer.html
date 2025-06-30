@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sp●tify風歌詞表示サイト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* カスタムスタイル */
+        body {
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10+ */
+            user-select: none; /* Standard syntax */
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        .lyrics-container {
+            transition: background-color 0.5s ease;
+            overflow-y: scroll;
+            scroll-behavior: smooth;
+        }
+        .lyrics-container::-webkit-scrollbar { display: none; }
+        .lyrics-container { -ms-overflow-style: none; scrollbar-width: none; }
+        .lyric-line {
+            transition: color 0.5s ease, transform 0.3s ease, font-weight 0.3s ease;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            padding: 12px 24px;
+            font-size: 1.75rem;
+            line-height: 2.25rem;
+        }
+        .lyric-line.active {
+            color: rgba(255, 255, 255, 1);
+            font-weight: 700;
+            transform: scale(1.05);
+        }
+        .progress-bar-wrapper {
+            padding: 8px 0;
+            cursor: pointer;
+        }
+        .control-btn { color: rgba(255, 255, 255, 0.7); transition: color 0.2s ease; }
+        .control-btn:hover { color: rgba(255, 255, 255, 1); }
+        .modal-input {
+            background-color: #1f2937; /* bg-gray-800 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.5rem 0.75rem;
+            color: white;
+        }
+        .modal-input:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            border-color: #3b82f6; /* focus:border-blue-500 */
+            box-shadow: 0 0 0 2px #3b82f6; /* focus:ring-2 focus:ring-blue-500 */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white overflow-hidden">
+
+    <!-- メインの歌詞表示エリア -->
+    <main id="main-container" class="h-screen w-screen flex flex-col transition-colors duration-500">
+        <div id="lyrics-container" class="flex-grow pt-48 pb-48"></div>
+        <!-- コントロールパネル -->
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black bg-opacity-30 backdrop-blur-sm">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-2">
+                    <div id="song-title" class="font-bold text-lg truncate"></div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="current-time-display" class="text-xs w-10 text-center">0:00</div>
+                    <div id="progress-bar-container" class="progress-bar-wrapper w-full group">
+                        <div class="w-full h-1 bg-white/30 rounded-full relative">
+                            <div id="progress-bar" class="h-1 bg-white rounded-full"></div>
+                            <div id="progress-thumb" class="w-3 h-3 bg-white rounded-full absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" style="left: 0%;"></div>
+                        </div>
+                    </div>
+                    <div id="total-duration-display" class="text-xs w-10 text-center">0:00</div>
+                </div>
+                <div class="flex justify-center items-center gap-6 mt-4">
+                    <button id="repeat-btn" class="control-btn text-xl"><i class="fas fa-redo"></i></button>
+                    <button id="prev-btn" class="control-btn text-2xl"><i class="fas fa-step-backward"></i></button>
+                    <button id="play-pause-btn" class="text-black text-3xl w-16 h-16 flex items-center justify-center rounded-full bg-white hover:bg-gray-200 transition">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button id="next-btn" class="control-btn text-2xl"><i class="fas fa-step-forward"></i></button>
+                    <button id="shuffle-btn" class="control-btn text-xl"><i class="fas fa-random"></i></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 設定モーダル -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <h2 class="text-xl font-bold p-6 border-b border-gray-700 flex-shrink-0">設定</h2>
+            <div class="p-6 space-y-6 overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="title-input" class="block mb-2 text-sm font-medium text-gray-300">曲名</label>
+                        <input type="text" id="title-input" class="modal-input w-full">
+                    </div>
+                    <div>
+                        <label for="duration-input" class="block mb-2 text-sm font-medium text-gray-300">総再生時間 (MM:SS)</label>
+                        <input type="text" id="duration-input" class="modal-input w-full" placeholder="例: 3:45">
+                    </div>
+                    <div>
+                        <label for="bg-color-input" class="block mb-2 text-sm font-medium text-gray-300">背景色</label>
+                        <input type="color" id="bg-color-input" class="w-full h-10 p-1 bg-gray-700 border border-gray-600 rounded-md cursor-pointer">
+                    </div>
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-300">歌詞</label>
+                    <div id="lyrics-editor" class="space-y-2"></div>
+                    <button id="add-lyric-btn" class="mt-4 px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md transition text-sm font-medium">
+                        <i class="fas fa-plus mr-2"></i>歌詞を追加
+                    </button>
+                </div>
+                <textarea id="csv-buffer" class="hidden"></textarea>
+            </div>
+            <div class="flex justify-between items-center p-6 border-t border-gray-700 mt-auto flex-shrink-0">
+                <div>
+                    <button id="import-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md transition text-sm font-medium">CSVインポート</button>
+                    <input type="file" id="file-importer" accept=".csv, .txt" class="hidden">
+                    <button id="export-btn" class="ml-2 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-md transition text-sm font-medium">CSVエクスポート</button>
+                </div>
+                <div>
+                    <button id="cancel-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md transition text-sm font-medium">キャンセル</button>
+                    <button id="save-btn" class="ml-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md transition text-sm font-medium">保存して閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM要素
+            const mainContainer = document.getElementById('main-container');
+            const lyricsContainer = document.getElementById('lyrics-container');
+            const songTitleEl = document.getElementById('song-title');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const progressBarContainer = document.getElementById('progress-bar-container');
+            const progressThumb = document.getElementById('progress-thumb');
+            const currentTimeDisplay = document.getElementById('current-time-display');
+            const totalDurationDisplay = document.getElementById('total-duration-display');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const repeatBtn = document.getElementById('repeat-btn');
+            
+            // モーダルDOM
+            const settingsModal = document.getElementById('settings-modal');
+            const bgColorInput = document.getElementById('bg-color-input');
+            const titleInput = document.getElementById('title-input');
+            const durationInput = document.getElementById('duration-input');
+            const lyricsEditor = document.getElementById('lyrics-editor');
+            const addLyricBtn = document.getElementById('add-lyric-btn');
+            const saveBtn = document.getElementById('save-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const importBtn = document.getElementById('import-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const fileImporter = document.getElementById('file-importer');
+
+            // ★修正: アプリケーションの初期状態
+            let state = {
+                songTitle: '君が代',
+                totalDuration: 60,
+                lyrics: [
+                    { time: 1, text: '君が代は' },
+                    { time: 11, text: '千代に八千代に' },
+                    { time: 22, text: 'さざれ石の' },
+                    { time: 32, text: '巌となりて' },
+                    { time: 42, text: '苔のむすまで' },
+                ],
+                backgroundColor: '#121212', // よりダークな背景色
+                isPlaying: false,
+                currentTime: 0,
+                timerId: null,
+                startTimeOffset: 0,
+                activeLyricIndex: -1,
+                repeatState: 'none',
+            };
+
+            // --- ユーティリティ関数 (変更なし) ---
+            const timeToSeconds = (timeStr) => {
+                if (!timeStr || typeof timeStr !== 'string') return 0;
+                const parts = timeStr.split(':').map(Number);
+                if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return 0;
+                return parts[0] * 60 + parts[1];
+            };
+            const secondsToTime = (totalSeconds) => {
+                const s = Math.floor(totalSeconds);
+                const minutes = Math.floor(s / 60);
+                const seconds = s % 60;
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            };
+
+            // --- UI更新 ---
+            const renderLyrics = () => {
+                lyricsContainer.innerHTML = '';
+                state.lyrics.forEach((line, index) => {
+                    const p = document.createElement('p');
+                    p.textContent = line.text;
+                    p.className = 'lyric-line text-center';
+                    p.dataset.index = index;
+                    lyricsContainer.appendChild(p);
+                });
+                updateUI();
+            };
+            const updateUI = () => {
+                mainContainer.style.backgroundColor = state.backgroundColor;
+                songTitleEl.textContent = state.songTitle;
+                totalDurationDisplay.textContent = secondsToTime(state.totalDuration);
+                currentTimeDisplay.textContent = secondsToTime(state.currentTime);
+                const progress = state.totalDuration > 0 ? (state.currentTime / state.totalDuration) * 100 : 0;
+                progressBar.style.width = `${progress}%`;
+                progressThumb.style.left = `${progress}%`;
+                updateHighlight();
+            };
+            const updateHighlight = () => {
+                let newActiveIndex = -1;
+                for (let i = state.lyrics.length - 1; i >= 0; i--) {
+                    if (state.currentTime >= state.lyrics[i].time) { newActiveIndex = i; break; }
+                }
+                if (newActiveIndex !== state.activeLyricIndex) {
+                    lyricsContainer.children[state.activeLyricIndex]?.classList.remove('active');
+                    const activeLine = lyricsContainer.children[newActiveIndex];
+                    if (activeLine) {
+                        activeLine.classList.add('active');
+                        activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    state.activeLyricIndex = newActiveIndex;
+                }
+            };
+            
+            // --- 再生ロジック (変更なし) ---
+            const updateLoop = () => {
+                if (!state.isPlaying) return;
+                state.currentTime = (Date.now() - state.startTimeOffset) / 1000;
+                if (state.currentTime >= state.totalDuration) {
+                    if (state.repeatState === 'all') { resetPlayer(); play(); return; }
+                    else { state.currentTime = state.totalDuration; pause(); }
+                }
+                updateUI();
+                state.timerId = requestAnimationFrame(updateLoop);
+            };
+            const play = () => {
+                if (state.isPlaying) return;
+                state.isPlaying = true;
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                if (state.currentTime >= state.totalDuration) resetPlayer();
+                state.startTimeOffset = Date.now() - state.currentTime * 1000;
+                state.timerId = requestAnimationFrame(updateLoop);
+            };
+            const pause = () => {
+                state.isPlaying = false;
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                cancelAnimationFrame(state.timerId);
+            };
+            const resetPlayer = () => {
+                pause();
+                state.currentTime = 0;
+                state.activeLyricIndex = -1;
+                updateUI();
+                renderLyrics();
+            };
+            const syncTime = () => {
+                if (state.isPlaying) state.startTimeOffset = Date.now() - state.currentTime * 1000;
+                updateUI();
+            };
+
+            // --- モーダル & 歌詞エディタ (変更なし) ---
+            const createLyricEditorRow = (time = 0, text = '') => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2 lyric-editor-row';
+                row.innerHTML = `
+                    <input type="text" value="${secondsToTime(time)}" class="modal-input w-24 text-center" placeholder="MM:SS">
+                    <input type="text" value="${text}" class="modal-input flex-grow" placeholder="歌詞">
+                    <button class="remove-lyric-btn p-2 text-gray-400 hover:text-red-500 transition"><i class="fas fa-trash"></i></button>
+                `;
+                row.querySelector('.remove-lyric-btn').addEventListener('click', () => row.remove());
+                return row;
+            };
+            const openModal = () => {
+                pause();
+                titleInput.value = state.songTitle;
+                durationInput.value = secondsToTime(state.totalDuration);
+                bgColorInput.value = state.backgroundColor;
+                lyricsEditor.innerHTML = '';
+                state.lyrics.forEach(lyric => lyricsEditor.appendChild(createLyricEditorRow(lyric.time, lyric.text)));
+                settingsModal.classList.remove('hidden');
+            };
+            const saveSettings = () => {
+                const newTitle = titleInput.value.trim() || '無題';
+                const newDuration = timeToSeconds(durationInput.value);
+                if (newDuration <= 0) { alert('総再生時間が正しくありません。'); return; }
+                const newLyrics = [];
+                document.querySelectorAll('.lyric-editor-row').forEach(row => {
+                    const timeInput = row.children[0].value;
+                    const textInput = row.children[1].value.trim();
+                    if (textInput) newLyrics.push({ time: timeToSeconds(timeInput), text: textInput });
+                });
+                newLyrics.sort((a, b) => a.time - b.time);
+                state.songTitle = newTitle; state.totalDuration = newDuration;
+                state.lyrics = newLyrics; state.backgroundColor = bgColorInput.value;
+                resetPlayer(); closeModal();
+            };
+            const closeModal = () => settingsModal.classList.add('hidden');
+
+            // --- CSV & ファイル処理 (変更なし) ---
+            const parseCSV = (csvText) => {
+                const lines = csvText.trim().split('\n');
+                if (lines.length < 1) return null;
+                const header = lines.shift().split(',');
+                const newTotalDuration = timeToSeconds(header[0]?.trim());
+                const newSongTitle = header[1]?.trim() || '無題';
+                if (newTotalDuration <= 0) return null;
+                const newLyrics = lines.map(line => {
+                    const parts = line.split(',');
+                    const time = timeToSeconds(parts[0]?.trim());
+                    const text = parts.slice(1).join(',').trim();
+                    return (text && !isNaN(time)) ? { time, text } : null;
+                }).filter(Boolean).sort((a, b) => a.time - b.time);
+                return { songTitle: newSongTitle, totalDuration: newTotalDuration, lyrics: newLyrics };
+            };
+            const generateCSV = () => {
+                const header = `${durationInput.value},${titleInput.value}`;
+                const body = Array.from(document.querySelectorAll('.lyric-editor-row')).map(row => `${row.children[0].value},${row.children[1].value}`).join('\n');
+                return `${header}\n${body}`;
+            };
+
+            // --- イベントリスナー ---
+            playPauseBtn.addEventListener('click', () => state.isPlaying ? pause() : play());
+            nextBtn.addEventListener('click', () => {
+                const nextLyric = state.lyrics.find(l => l.time > state.currentTime);
+                state.currentTime = nextLyric ? nextLyric.time : state.totalDuration;
+                syncTime();
+            });
+            prevBtn.addEventListener('click', () => {
+                let currentLyricIndex = state.lyrics.findIndex(l => l.time >= state.currentTime) -1;
+                const currentLyricStartTime = (currentLyricIndex >= 0) ? state.lyrics[currentLyricIndex].time : 0;
+                if (state.currentTime > currentLyricStartTime + 2 || currentLyricIndex < 0) {
+                    state.currentTime = currentLyricStartTime;
+                } else {
+                    const prevIndex = Math.max(0, currentLyricIndex - 1);
+                    state.currentTime = state.lyrics[prevIndex]?.time ?? 0;
+                }
+                syncTime();
+            });
+            repeatBtn.addEventListener('click', () => {
+                state.repeatState = (state.repeatState === 'none') ? 'all' : 'none';
+                repeatBtn.classList.toggle('text-green-400', state.repeatState === 'all');
+            });
+
+            // プログレスバーのドラッグによるシーク機能
+            let isSeeking = false;
+            const seek = (e) => {
+                const rect = progressBarContainer.getBoundingClientRect();
+                const clientX = e.type.includes('touch') ? e.changedTouches[0].clientX : e.clientX;
+                const progress = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+                state.currentTime = progress * state.totalDuration;
+                syncTime();
+            };
+            progressBarContainer.addEventListener('mousedown', (e) => { isSeeking = true; seek(e); });
+            progressBarContainer.addEventListener('touchstart', (e) => { isSeeking = true; seek(e); });
+            window.addEventListener('mousemove', (e) => { if (isSeeking) seek(e); });
+            window.addEventListener('touchmove', (e) => { if (isSeeking) seek(e); });
+            window.addEventListener('mouseup', () => { isSeeking = false; });
+            window.addEventListener('touchend', () => { isSeeking = false; });
+
+            // 長押しイベント
+            let pressTimer = null;
+            const startPress = (e) => {
+                if (e.target.closest('button, #settings-modal, .progress-bar-wrapper')) return;
+                pressTimer = setTimeout(openModal, 1000);
+            };
+            const cancelPress = () => clearTimeout(pressTimer);
+            mainContainer.addEventListener('mousedown', startPress);
+            mainContainer.addEventListener('mouseup', cancelPress);
+            mainContainer.addEventListener('mouseleave', cancelPress);
+            mainContainer.addEventListener('touchstart', startPress);
+            mainContainer.addEventListener('touchend', cancelPress);
+
+            // モーダルイベント
+            saveBtn.addEventListener('click', saveSettings);
+            cancelBtn.addEventListener('click', closeModal);
+            addLyricBtn.addEventListener('click', () => lyricsEditor.appendChild(createLyricEditorRow()));
+            exportBtn.addEventListener('click', () => {
+                const csvContent = generateCSV();
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `${titleInput.value.replace(/\s/g, '_') || 'lyrics'}.csv`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            });
+            importBtn.addEventListener('click', () => fileImporter.click());
+            fileImporter.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = parseCSV(e.target.result);
+                    if (data) {
+                        titleInput.value = data.songTitle;
+                        durationInput.value = secondsToTime(data.totalDuration);
+                        lyricsEditor.innerHTML = '';
+                        data.lyrics.forEach(lyric => lyricsEditor.appendChild(createLyricEditorRow(lyric.time, lyric.text)));
+                    } else {
+                        alert('CSVファイルの形式が正しくありません。');
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            });
+
+            // 初期化
+            const initialize = () => resetPlayer();
+            initialize();
+        });
+    </script>
+</body>
+</html>
