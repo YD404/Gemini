@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ヨシ！</title>
+    <!-- 外部ライブラリの読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* 日本語フォントと基本スタイルを設定 */
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* 明朝体用のスタイル */
+        .font-mincho .problem-text {
+            font-family: 'Shippori Mincho', 'Noto Serif JP', serif;
+        }
+
+        /* コンテンツ編集可能な要素のデフォルトアウトラインを消す */
+        [contenteditable]:focus {
+            outline: 2px dashed #38bdf8;
+            border-radius: 4px;
+        }
+
+        /* 縦書き用のクラス */
+        .vertical-text {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+        }
+
+        /* 変化を滑らかにするためのトランジション */
+        .problem-text {
+            transition: filter 1.5s ease-in-out, transform 1.5s ease-in-out;
+            /* テキストを中央揃えにする */
+            text-align: center;
+            /* ブロック自体を水平方向中央に配置するための基準 */
+            transform: translateX(-50%);
+            /* テキストが空でも最小幅を確保 */
+            min-width: 80px;
+        }
+
+        /* 酔っぱらい状態になったときの問題テキストのスタイル（ブラー） */
+        .is-drunk .problem-text {
+            filter: blur(8px);
+            /* 中央揃えを維持しつつ拡大 */
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        #meme-container {
+            /* 背景色の変化を滑らかにする */
+            transition: background-color 1.5s ease-in-out;
+        }
+          
+        /* 画像コンテナ: Flexboxで子要素を下に揃える */
+        #person-container {
+            display: flex;
+            align-items: flex-end; /* 子要素を下に揃える */
+            justify-content: center;
+            height: 100%;
+            position: relative; /* 著作権表示の位置決めの基点 */
+        }
+
+        /* アップロードされた画像のスタイル */
+        #image-before, #image-after, #image-default, #image-after-default {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; /* アスペクト比を維持してコンテナに収める */
+        }
+
+        /* --- 画像とコピーライト表示ロジック --- */
+        #image-before, #image-after, #image-after-default { display: none; }
+        #image-default, #copyright-notice { display: block; }
+
+        .has-before-image #image-default,
+        .has-before-image #copyright-notice { display: none; }
+        .has-before-image #image-before { display: block; }
+
+        .is-drunk #image-default,
+        .is-drunk #image-before { display: none; }
+
+        .is-drunk #person-container:not(.has-after-image) #image-after-default {
+            display: block;
+        }
+        
+        .is-drunk .has-after-image #image-after {
+            display: block;
+        }
+        .is-drunk .has-after-image #copyright-notice {
+            display: none;
+        }
+        
+        #copyright-notice {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 0.6rem;
+            color: #9ca3af;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+
+        /* 操作ボタンの共通スタイル */
+        .control-btn {
+            background-color: #e5e7eb;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .control-btn:hover {
+            background-color: #d1d5db;
+            transform: scale(1.1);
+        }
+        .control-btn .material-icons {
+            color: #4b5563;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-3xl mx-auto flex justify-center mb-2">
+        <button id="font-toggle-button" class="px-4 py-2 bg-white rounded-md shadow text-sm font-semibold text-gray-700 hover:bg-gray-100 transition">明朝体</button>
+    </div>
+
+    <div id="meme-container" class="w-full max-w-3xl bg-white relative" style="aspect-ratio: 16 / 10;">
+        <!-- 画像コンテナの親要素の高さをh-fullに変更 -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/4 h-full">
+             <div id="person-container">
+                <!-- デフォルト画像 -->
+                <img id="image-default" src="media/face_smile_man1.png" alt="デフォルトの飲酒前画像">
+                <img id="image-before" alt="飲酒前の画像">
+                <!-- 飲酒後デフォルト画像 -->
+                <img id="image-after-default" src="media/suitou_mini_drink_man.png" alt="デフォルトの飲酒後画像">
+                <img id="image-after" alt="飲酒後の画像">
+                <!-- 著作権表示 -->
+                <div id="copyright-notice">©︎いらすとや</div>
+            </div>
+        </div>
+
+        <!-- テキスト要素 -->
+        <div contenteditable="true" class="problem-text absolute top-[8%] left-[55%] text-2xl md:text-4xl font-bold text-gray-800 p-2" style="font-size: clamp(16px, 3.5vw, 44px);">終身雇用の崩壊</div>
+        <div contenteditable="true" class="problem-text absolute top-[18%] left-[30%] text-xl md:text-2xl text-gray-700 p-2" style="font-size: clamp(14px, 2.5vw, 32px);">ストレス社会</div>
+        <div contenteditable="true" class="problem-text absolute top-[15%] left-[18%] text-lg md:text-xl text-gray-600 p-2" style="font-size: clamp(12px, 2vw, 24px);">介護</div>
+        <div contenteditable="true" class="problem-text absolute top-[25%] left-[5%] text-4xl md:text-6xl font-bold text-gray-800 p-2 vertical-text" style="font-size: clamp(20px, 4.5vw, 56px);">将来の不安</div>
+        <div contenteditable="true" class="problem-text absolute top-[35%] left-[20%] text-3xl md:text-5xl font-bold text-gray-800 p-2" style="font-size: clamp(18px, 4vw, 50px);">年金問題</div>
+        <div contenteditable="true" class="problem-text absolute top-[65%] left-[28%] text-2xl md:text-4xl text-gray-700 p-2" style="font-size: clamp(16px, 3.5vw, 44px);">結婚</div>
+        <div contenteditable="true" class="problem-text absolute top-[85%] left-[10%] text-xl md:text-2xl text-gray-600 p-2" style="font-size: clamp(14px, 2.5vw, 32px);">低賃金</div>
+        <div contenteditable="true" class="problem-text absolute top-[30%] left-[95%] text-6xl md:text-8xl font-bold text-gray-800 p-2 vertical-text" style="font-size: clamp(24px, 7vw, 80px);">就職</div>
+        <div id="text-changeable" contenteditable="true" class="problem-text absolute top-[50%] left-[80%] text-lg md:text-xl text-gray-600 p-2" style="font-size: clamp(12px, 2vw, 24px);">政治不信</div>
+        <div contenteditable="true" class="problem-text absolute top-[78%] left-[75%] text-xl md:text-2xl text-gray-700 p-2" style="font-size: clamp(14px, 2.5vw, 32px);">閉塞感</div>
+        <div contenteditable="true" class="problem-text absolute top-[85%] left-[85%] text-lg md:text-xl text-gray-600 p-2" style="font-size: clamp(12px, 2vw, 24px);">老後</div>
+        <div contenteditable="true" class="problem-text absolute top-[90%] left-[95%] text-sm md:text-base text-gray-500 p-2" style="font-size: clamp(10px, 1.5vw, 20px);">脂肪肝</div>
+    </div>
+
+    <div class="flex justify-center items-center gap-4 mt-8 w-full max-w-md mx-auto">
+        <!-- 「元に戻す」ボタンに変更 -->
+        <button id="undo-button" title="元に戻す" class="control-btn w-12 h-12">
+            <span class="material-icons text-2xl">undo</span>
+        </button>
+        <label for="upload-before" title="飲酒前の画像" class="control-btn w-12 h-12">
+            <span class="material-icons text-2xl">image</span>
+        </label>
+        <input type="file" id="upload-before" class="hidden" accept="image/*">
+
+        <button id="drink-button" title="酒を飲む" class="control-btn w-20 h-20 bg-white shadow-lg">
+            <span class="material-icons text-5xl text-gray-700">play_arrow</span>
+        </button>
+
+        <label for="upload-after" title="飲酒後の画像" class="control-btn w-12 h-12">
+            <span class="material-icons text-2xl">local_bar</span>
+        </label>
+        <input type="file" id="upload-after" class="hidden" accept="image/*">
+
+        <button id="save-button" title="画像を保存" class="control-btn w-12 h-12">
+            <span class="material-icons text-2xl">save</span>
+        </button>
+    </div>
+
+    <div id="message-box" class="fixed top-5 right-5 bg-white p-4 rounded-lg shadow-lg text-gray-700 opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+
+    <script>
+        const drinkButton = document.getElementById('drink-button');
+        const saveButton = document.getElementById('save-button');
+        // IDを変更したため、変数名も変更
+        const undoButton = document.getElementById('undo-button');
+        const memeContainer = document.getElementById('meme-container');
+        const messageBox = document.getElementById('message-box');
+        const fontToggleButton = document.getElementById('font-toggle-button');
+        const textChangeable = document.getElementById('text-changeable');
+
+        const uploadBefore = document.getElementById('upload-before');
+        const uploadAfter = document.getElementById('upload-after');
+        const personContainer = document.getElementById('person-container');
+        const imageDefault = document.getElementById('image-default');
+        const imageBefore = document.getElementById('image-before');
+        const imageAfterDefault = document.getElementById('image-after-default');
+        const imageAfter = document.getElementById('image-after');
+        const copyrightNotice = document.getElementById('copyright-notice');
+
+
+        // 「フォント切り替え」ボタンの処理
+        fontToggleButton.addEventListener('click', () => {
+            memeContainer.classList.toggle('font-mincho');
+            if (memeContainer.classList.contains('font-mincho')) {
+                textChangeable.textContent = '地方の過疎化';
+            } else {
+                textChangeable.textContent = '政治不信';
+            }
+        });
+
+        // 「再生」ボタン（飲酒開始）の処理
+        drinkButton.addEventListener('click', () => {
+            memeContainer.classList.add('is-drunk');
+            memeContainer.style.backgroundColor = '#fefce8'; // bg-yellow-50
+        });
+
+        // 「元に戻す」ボタンの処理 (仕様変更)
+        undoButton.addEventListener('click', () => {
+            // 飲酒状態のクラスを削除し、背景色を元に戻すだけにする
+            // これにより、編集したテキストや画像は保持される
+            memeContainer.classList.remove('is-drunk');
+            memeContainer.style.backgroundColor = '#ffffff';
+        });
+
+        // 「飲酒前」画像アップロードの処理
+        uploadBefore.addEventListener('change', (event) => {
+            if (event.target.files.length > 0) {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imageBefore.src = e.target.result;
+                    personContainer.classList.add('has-before-image');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 「飲酒後」画像アップロードの処理
+        uploadAfter.addEventListener('change', (event) => {
+            if (event.target.files.length > 0) {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imageAfter.src = e.target.result;
+                    personContainer.classList.add('has-after-image');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        /**
+         * html2canvasのエラーを処理するための共通関数
+         * @param {Error} err - 発生したエラーオブジェクト
+         */
+        function handleCanvasError(err) {
+            console.error('oops, something went wrong!', err);
+            messageBox.textContent = 'エラーが発生しました。';
+            messageBox.style.backgroundColor = '#fecaca'; // red-200
+             setTimeout(() => {
+                messageBox.classList.add('opacity-0');
+                messageBox.style.backgroundColor = '#ffffff';
+            }, 3000);
+        }
+
+        /**
+         * テキストDIVからぼかし効果を適用した画像を生成する
+         * @param {HTMLElement} div - 対象のテキスト要素
+         * @param {HTMLElement} container - 親コンテナ要素
+         * @returns {Promise<Object|null>} 生成された画像要素と元のdiv要素を含むオブジェクト、または空テキストの場合はnull
+         */
+        function createBlurredImageFromText(div, container) {
+            return new Promise((resolve) => {
+                const text = div.innerText;
+                if (!text || !text.trim()) {
+                    resolve(null);
+                    return;
+                }
+
+                const style = window.getComputedStyle(div);
+                const font = style.font;
+                const color = style.color;
+                const isVertical = style.writingMode === 'vertical-rl';
+                let lineHeight = parseFloat(style.lineHeight);
+                if (isNaN(lineHeight)) {
+                    lineHeight = parseFloat(style.fontSize) * 1.2;
+                }
+
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.font = font;
+
+                const padding = 10;
+                if (isVertical) {
+                    let maxWidth = 0;
+                    for(const char of text) {
+                        const metrics = ctx.measureText(char);
+                        if (metrics.width > maxWidth) maxWidth = metrics.width;
+                    }
+                    canvas.width = maxWidth + padding * 2;
+                    canvas.height = (lineHeight * text.length) + padding * 2;
+                } else {
+                    const metrics = ctx.measureText(text);
+                    canvas.width = metrics.width + padding * 2;
+                    canvas.height = lineHeight + padding * 2;
+                }
+
+                ctx.font = font;
+                ctx.fillStyle = color;
+                ctx.filter = 'blur(4px)';
+                ctx.textBaseline = 'top';
+                ctx.textAlign = 'left';
+
+                if (isVertical) {
+                    let currentY = padding;
+                    for (const char of text) {
+                        const textWidth = ctx.measureText(char).width;
+                        const centeredX = (canvas.width - textWidth) / 2;
+                        ctx.fillText(char, centeredX, currentY);
+                        currentY += lineHeight;
+                    }
+                } else {
+                    ctx.fillText(text, padding, padding);
+                }
+
+                const img = new Image();
+                img.onload = () => {
+                    const rect = div.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
+
+                    img.style.position = 'absolute';
+                    img.style.left = `${rect.left - containerRect.left}px`;
+                    img.style.top = `${rect.top - containerRect.top}px`;
+                    img.style.zIndex = '10';
+                    resolve({ img, div });
+                };
+                img.onerror = () => resolve(null);
+                img.src = canvas.toDataURL('image/png');
+            });
+        }
+
+        // 「画像を保存」ボタンの処理
+        saveButton.addEventListener('click', async () => {
+            messageBox.textContent = '画像を生成中です...';
+            messageBox.classList.remove('opacity-0');
+
+            const isDrunk = memeContainer.classList.contains('is-drunk');
+
+            if (!isDrunk) {
+                html2canvas(memeContainer, {
+                    backgroundColor: window.getComputedStyle(memeContainer).backgroundColor,
+                    useCORS: true,
+                    scale: 2,
+                    allowTaint: true
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'sake-de-wasureru.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    messageBox.textContent = 'ダウンロードが完了しました！';
+                    setTimeout(() => messageBox.classList.add('opacity-0'), 2000);
+                }).catch(handleCanvasError);
+                return;
+            }
+
+            const problemTexts = Array.from(document.querySelectorAll('.problem-text'));
+            const tempElements = [];
+
+            try {
+                const imageCreationPromises = problemTexts.map(div => 
+                    createBlurredImageFromText(div, memeContainer)
+                );
+
+                const results = await Promise.all(imageCreationPromises);
+
+                results.forEach(result => {
+                    if (result) {
+                        memeContainer.appendChild(result.img);
+                        result.div.style.visibility = 'hidden';
+                        tempElements.push(result);
+                    }
+                });
+
+                const canvas = await html2canvas(memeContainer, {
+                    backgroundColor: window.getComputedStyle(memeContainer).backgroundColor,
+                    useCORS: true,
+                    scale: 2,
+                    allowTaint: true
+                });
+
+                const link = document.createElement('a');
+                link.download = 'sake-de-wasureru-yotta.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                messageBox.textContent = 'ダウンロードが完了しました！';
+                setTimeout(() => messageBox.classList.add('opacity-0'), 2000);
+
+            } catch (err) {
+                handleCanvasError(err);
+            } finally {
+                tempElements.forEach(({ div, img }) => {
+                    div.style.visibility = 'visible';
+                    if (img && img.parentNode) {
+                        img.parentNode.removeChild(img);
+                    }
+                });
+            }
+        });
+
+    </script>
+
+</body>
+</html>
