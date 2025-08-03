@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">半円グラフジェネレーター</title>
+    <!-- Tailwind CSSを読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.jsを読み込み -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* フォント設定 */
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+        }
+        /* Chart.jsのツールチップを無効化 */
+        .chartjs-tooltip {
+            display: none;
+        }
+        /* テキストに縁取りを追加するクラス */
+        .text-outline {
+            text-shadow: 
+                -1px -1px 0 #FFF,  
+                 1px -1px 0 #FFF,
+                -1px  1px 0 #FFF,
+                 1px  1px 0 #FFF,
+                 0 0 8px #FFF;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-8 max-w-5xl">
+        
+        <!-- 入力コントロール -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 items-center">
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 space-y-4">
+                <input type="text" id="redNameInput" value="与党" class="w-full p-2 border-b-2 border-red-200 text-lg font-bold text-red-600 focus:outline-none focus:border-red-500 transition">
+                <input type="number" id="redValue" value="100" class="w-full p-3 border border-gray-300 rounded-lg text-2xl focus:ring-2 focus:ring-red-400 focus:border-red-400 transition">
+            </div>
+
+            <div class="text-center">
+                <button id="updateChart" class="w-full md:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 shadow-lg">
+                    グラフを更新
+                </button>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 space-y-4">
+                <input type="text" id="blueNameInput" value="野党" class="w-full p-2 border-b-2 border-blue-200 text-lg font-bold text-blue-600 text-right focus:outline-none focus:border-blue-500 transition">
+                <input type="number" id="blueValue" value="100" class="w-full p-3 border border-gray-300 rounded-lg text-2xl text-right focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition">
+            </div>
+        </div>
+
+        <!-- グラフタイトル -->
+        <div class="text-center mb-4">
+            <input type="text" id="mainTitleInput" value="勢力グラフ" class="text-3xl sm:text-4xl font-bold text-gray-700 bg-transparent text-center w-full outline-none focus:bg-gray-100 rounded-lg p-2">
+        </div>
+
+        <!-- グラフ表示エリア -->
+        <div class="bg-white p-4 sm:p-8 rounded-2xl shadow-xl border border-gray-200 relative">
+            <div class="w-full max-w-2xl mx-auto relative">
+                <canvas id="semiCircleChart"></canvas>
+                <!-- 中央のテキスト表示 -->
+                <div id="chartCenterText" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none -mt-4 sm:-mt-8">
+                     <div class="text-center">
+                        <p id="statusTextDisplay" class="text-xl sm:text-3xl font-bold text-gray-800 h-10 text-outline"></p>
+                        <p id="totalValue" class="text-lg sm:text-xl font-bold text-gray-600 mt-1">合計: 125</p>
+                    </div>
+                </div>
+            </div>
+             <!-- 凡例 -->
+            <div class="flex justify-between mt-4 sm:mt-0 sm:px-8">
+                <div class="text-center">
+                    <p class="text-2xl sm:text-5xl font-bold text-red-600" id="redDisplay">100</p>
+                    <p class="text-sm text-gray-500" id="redLegendLabel">与党</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl sm:text-5xl font-bold text-blue-600" id="blueDisplay">100</p>
+                    <p class="text-sm text-gray-500" id="blueLegendLabel">野党</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM要素の取得
+            const ctx = document.getElementById('semiCircleChart').getContext('2d');
+            const redValueInput = document.getElementById('redValue');
+            const blueValueInput = document.getElementById('blueValue');
+            const redNameInput = document.getElementById('redNameInput');
+            const blueNameInput = document.getElementById('blueNameInput');
+            const mainTitleInput = document.getElementById('mainTitleInput');
+            const updateChartBtn = document.getElementById('updateChart');
+            const totalValueDisplay = document.getElementById('totalValue');
+            const redDisplay = document.getElementById('redDisplay');
+            const blueDisplay = document.getElementById('blueDisplay');
+            const redLegendLabel = document.getElementById('redLegendLabel');
+            const blueLegendLabel = document.getElementById('blueLegendLabel');
+            const statusTextDisplay = document.getElementById('statusTextDisplay');
+            const pageTitle = document.getElementById('pageTitle');
+
+            let chart;
+            let animationFrameId; // アニメーションフレームを管理
+
+            // 状況テキストを生成する関数
+            function getStatusText(red, blue, redName, blueName) {
+                const total = red + blue;
+                if (total === 0) return "値を入力";
+
+                if (red === blue) return "互角";
+
+                const ratio = red / total;
+                
+                if (ratio > 0.66) return `${redName}が圧勝`;
+                if (ratio < 0.34) return `${blueName}が圧勝`;
+                if (ratio > 0.55) return `${redName}が優勢`;
+                if (ratio < 0.45) return `${blueName}が優勢`;
+                
+                return "接戦";
+            }
+
+
+            // グラフを初期化または更新する関数
+            function createOrUpdateChart() {
+                // 既存のアニメーションがあればキャンセル
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+
+                // 入力値を取得
+                const redTarget = parseInt(redValueInput.value, 10) || 0;
+                const blueTarget = parseInt(blueValueInput.value, 10) || 0;
+                const redName = redNameInput.value || '与党';
+                const blueName = blueNameInput.value || '野党';
+                const mainTitle = mainTitleInput.value || '勢力グラフ';
+
+                // ページタイトルと凡例ラベルを更新
+                pageTitle.textContent = mainTitle;
+                redLegendLabel.textContent = redName;
+                blueLegendLabel.textContent = blueName;
+
+                // 状況テキストを更新（アニメーション中は固定）
+                statusTextDisplay.textContent = getStatusText(redTarget, blueTarget, redName, blueName);
+
+                // 開始時の値を取得（チャートがなければ0から開始）
+                const redStart = chart ? chart.data.datasets[0].data[0] : 0;
+                const blueStart = chart ? chart.data.datasets[0].data[1] : 0;
+                
+                const duration = 1200; // アニメーションの時間(ms)
+                let startTime = null;
+
+                // アニメーションの実行関数
+                function animate(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    
+                    const progress = Math.min((timestamp - startTime) / duration, 1);
+                    const easeOutQuart = t => 1 - (--t) * t * t * t;
+                    const easedProgress = easeOutQuart(progress);
+
+                    // 現在の値を計算
+                    const currentRed = Math.round(redStart + (redTarget - redStart) * easedProgress);
+                    const currentBlue = Math.round(blueStart + (blueTarget - blueStart) * easedProgress);
+                    const currentTotal = currentRed + currentBlue;
+
+                    // テキスト表示を更新
+                    totalValueDisplay.textContent = `合計: ${currentTotal}`;
+                    redDisplay.textContent = currentRed;
+                    blueDisplay.textContent = currentBlue;
+
+                    const data = {
+                        labels: [redName, blueName],
+                        datasets: [{
+                            data: [currentRed, currentBlue],
+                            backgroundColor: ['#DC2626', '#2563EB'],
+                            borderColor: '#ffffff',
+                            borderWidth: 4,
+                            hoverBackgroundColor: ['#EF4444', '#3B82F6']
+                        }]
+                    };
+
+                    const options = {
+                        rotation: -90,
+                        circumference: 180,
+                        cutout: '70%',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 2,
+                        animation: false, // Chart.jsのデフォルトアニメーションは無効化
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false }
+                        }
+                    };
+
+                    // チャートが存在すればデータを更新、なければ新規作成
+                    if (chart) {
+                        chart.data.labels = [redName, blueName];
+                        chart.data.datasets[0].data = [currentRed, currentBlue];
+                        chart.update('none'); // アニメーションなしで即時更新
+                    } else {
+                        chart = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: data,
+                            options: options
+                        });
+                    }
+
+                    // アニメーションが完了していなければ次のフレームを要求
+                    if (progress < 1) {
+                        animationFrameId = requestAnimationFrame(animate);
+                    } else {
+                        // 最終的な値を正確に設定
+                        totalValueDisplay.textContent = `合計: ${redTarget + blueTarget}`;
+                        redDisplay.textContent = redTarget;
+                        blueDisplay.textContent = blueTarget;
+                        chart.data.datasets[0].data = [redTarget, blueTarget];
+                        chart.update('none');
+                    }
+                }
+
+                // アニメーションを開始
+                animationFrameId = requestAnimationFrame(animate);
+            }
+
+            // 更新ボタンのクリックイベント
+            updateChartBtn.addEventListener('click', createOrUpdateChart);
+
+            // 初期表示（ページ読み込み時にもアニメーションを実行）
+            createOrUpdateChart();
+        });
+    </script>
+
+</body>
+</html>
