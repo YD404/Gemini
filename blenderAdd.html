@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blender おすすめアドオンリスト</title>
+    <!-- Tailwind CSSを読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome (アイコン) を読み込み -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* 日本語フォントが美しく表示されるように設定 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .accordion-content {
+            transition: max-height 0.3s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        .accordion-content.open {
+            max-height: 1000px; /* 十分な高さを確保 */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- メインコンテナ -->
+    <div class="container mx-auto max-w-3xl p-5 sm:p-8">
+
+        <!-- ヘッダー -->
+        <header class="text-center mb-16">
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-600">Blender Add-on List</h1>
+            <p class="text-gray-500 mt-2">厳選されたおすすめアドオン</p>
+        </header>
+
+        <main class="space-y-16">
+
+            <!-- カテゴリ: モデリング -->
+            <section id="modeling">
+                <h2 class="flex items-center gap-x-3 text-2xl font-bold border-b-2 border-blue-500 pb-3 mb-8">
+                    <i class="fa-solid fa-cubes text-blue-500 w-8 text-center"></i>
+                    <span>モデリング</span>
+                </h2>
+                <div class="space-y-4">
+                    <!-- Drop it -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Drop it</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">オブジェクトをワンクリックで床や他のオブジェクトの表面に接地させることができるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">選択したオブジェクトをショートカットキー（Vキー）または右クリックメニューから実行するだけで、一番下にあるオブジェクトの表面にぴったりと配置してくれます。複数オブジェクトを一度に配置することも可能です。また、配置する際にオブジェクトの傾きを保つか、接地面に合わせて回転させるかも選択できます。室内シーンや小物をよく作る方には特に便利なアドオンです。ただし、「BagaPie Modifier」アドオンも同じVキーをショートカットとして使用しているため、競合する場合はどちらかの設定を変更する必要があります。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- EdgeFlow -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                             <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">EdgeFlow</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">メッシュの膨らみを保ちながら、辺の流れを綺麗に整えることができるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">編集モードで辺を選択し、右クリックメニューから「Set Flow」を実行すると、周囲の形状に合わせて自動的に滑らかに調整してくれます。ガタガタになってしまった辺を整えたり、後から追加したループカットを周囲に馴染ませて自然な丸みを持せたい時などに非常に便利です。特にキャラクターモデリングなどでメッシュの流れを整える作業が多い方におすすめです。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- BagaPie Modifier -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                             <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">BagaPie Modifier</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">蔦の生成、オブジェクトの散布、便利なブーリアンなど、多機能なオールインワンアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <ul class="list-disc list-inside text-gray-600 text-sm space-y-2">
+                                    <li><strong>スキャッター機能：</strong> オブジェクトを別のオブジェクトの表面に大量に配置できます。密度、大きさ、回転などをランダム化したり、塗った範囲にだけ配置することも可能です。</li>
+                                    <li><strong>蔦（Ivy）生成機能：</strong> リアルな蔦を簡単に生成できます。生成後もエンプティで位置を調整したり、葉の付き方などを細かく設定できます。</li>
+                                    <li>その他、階段やパイプの生成、配列機能の強化など、役立つ機能が多数搭載されています。無料版だけでも十分多機能です。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Loop Tools -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Loop Tools</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">モデリングに役立つ複数の機能を追加するBlender標準搭載のアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <ul class="list-disc list-inside text-gray-600 text-sm space-y-2">
+                                    <li><strong>円（Circle）：</strong> 編集モードで選択した頂点や辺を綺麗な円形に整列させます。四角い面から円筒を押し出したい時などに便利です。</li>
+                                    <li><strong>フラット化（Flatten）：</strong> 選択した面を完全に平らにします。単純に特定の軸に沿ってスケールを0にするのとは異なり、斜めを向いた面でもワンクリックで平らにできるのが大きな利点です。</li>
+                                    <li>他にも、辺の流れを滑らかにする「リラックス」などの機能があります。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Auto Mirror EX -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Auto Mirror EX</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">Blender標準のオートミラーアドオンを強化したもので、より便利にミラー機能を使えるようになります。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">標準版と違い、ミラーを適用した後からでも軸や向きを変更できます。また、特定のオブジェクトをミラーの中心として指定する操作も素早く行えます。例えば、胴体オブジェクトを基準にして、手や足のオブジェクトを左右対称に配置するといった作業がショートカットキーで一瞬で完了します。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Hide Vertices -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Hide Vertices</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">頂点を表示させたまま編集できないようにロックできるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">通常、一部の頂点に影響を与えずに編集したい場合、その頂点を一度非表示（Hキー）にする必要があります。しかし、このアドオンを使えば、頂点を見ながら保護できるため、特にプロポーショナル編集などで「この部分は動かしたくない」という場合に非常に役立ちます。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Interactive Tools (Quick Origin) -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Interactive Tools (Quick Origin)</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">オブジェクトの原点（オレンジ色の点）の移動を高速化する機能が含まれるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">編集モードで頂点・辺・面などを選択し、ボタン一つでその位置に原点を移動させることができます。ドアの蝶番の部分に原点を移動させて回転させやすくするなど、原点の位置が重要になる場面で、Blenderの標準機能よりもはるかに素早く操作できます。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Physics Dropper -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Physics Dropper</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">物理演算を利用して、オブジェクトを自然な向きで落下・配置できるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">硬い物体のシミュレーション（リジッドボディ）と、布のシミュレーション（クロス）の両方に対応しています。入れ物の中に小物をランダムに詰めたり、オブジェクトの上に布を被せたりするような表現が、ボタン一つで簡単に実現できます。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Transparent Select -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Transparent Select</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">Altキーを押しながらドラッグするだけで、オブジェクトの裏側まで含めた「透過選択」が素早く行えるようになります。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">通常、裏側の頂点を選択するには一度透過表示に切り替える必要がありますが、このアドオンはその手間を省いてくれます。Altキーを押している間だけ一時的に透過選択モードになるため、手前だけ選択したい時と裏側まで選択したい時の切り替えが非常にスムーズになります。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Delete Selected Mesh -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Delete Selected Mesh</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">編集モードでの頂点・辺・面の削除を、選択モードに応じてメニュー表示なしで素早く行えるようにします。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">通常、Xキーで削除する際にはメニューが表示されますが、このアドオンを有効にすると、頂点選択モードなら頂点を、辺選択モードなら辺を、Xキーを押すだけで直接削除してくれるため、作業が効率化されます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- カテゴリ: オブジェクト生成 -->
+            <section id="object-generation">
+                <h2 class="flex items-center gap-x-3 text-2xl font-bold border-b-2 border-blue-500 pb-3 mb-8">
+                    <i class="fa-solid fa-wand-magic-sparkles text-blue-500 w-8 text-center"></i>
+                    <span>オブジェクト生成</span>
+                </h2>
+                <div class="space-y-4">
+                    <!-- Ocd(One Click Damage) -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Ocd(One Click Damage)</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">ワンクリックでオブジェクトにリアルまたは様式化された破損や損傷の表現を追加できるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">岩、レンガ、コンクリートなどのマテリアルでできたオブジェクトのエッジに、詳細な摩耗を簡単に作成することができます。Lite版が無料で提供されています。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- カテゴリ: シーン制作 -->
+            <section id="scene-production">
+                <h2 class="flex items-center gap-x-3 text-2xl font-bold border-b-2 border-blue-500 pb-3 mb-8">
+                    <i class="fa-solid fa-mountain-city text-blue-500 w-8 text-center"></i>
+                    <span>シーン制作</span>
+                </h2>
+                <div class="space-y-4">
+                    <!-- Dust Particles+ -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Dust Particles+</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">ジオメトリノードを利用して、シーンに埃やきらめく光、火の粉などのパーティクルを追加できるアセットです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">このアセットを使うことで、シーンをよりリアルに仕上げることができます。電球に集まる虫のような表現も可能です。無料版と有料版があります。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Urbaniac! -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Urbaniac!</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">都市を作成するためのリアルなアセットが含まれるライブラリアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">含まれるアセットはノードでマテリアルが設定されており、シーンの雰囲気に合わせて細かく調整することが可能です。無料版もあります。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- カテゴリ: 車関連 -->
+            <section id="car-related">
+                <h2 class="flex items-center gap-x-3 text-2xl font-bold border-b-2 border-blue-500 pb-3 mb-8">
+                    <i class="fa-solid fa-car-side text-blue-500 w-8 text-center"></i>
+                    <span>車関連</span>
+                </h2>
+                <div class="space-y-4">
+                    <!-- Rigacar -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Rigacar</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">リアルな車の動きを表現できるリギング・アニメーション用アドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">Blenderの標準機能だけでは表現が難しい、リアルな車の挙動を可能にします。車のモデル形状に合わせてリグ（骨格）を自動で生成してくれる機能もあります。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- カテゴリ: 作業効率UP -->
+            <section id="workflow-efficiency">
+                <h2 class="flex items-center gap-x-3 text-2xl font-bold border-b-2 border-blue-500 pb-3 mb-8">
+                    <i class="fa-solid fa-rocket text-blue-500 w-8 text-center"></i>
+                    <span>作業効率UP</span>
+                </h2>
+                <div class="space-y-4">
+                     <!-- Trace Generator From Image -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Trace Generator From Image</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">2D画像を3Dメッシュに変換できる、シンプルながら便利な無料アドオンです。</p>
+                        </button>
+                    </div>
+                     <!-- Machin3tools -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Machin3tools</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">ハードサーフェスモデリングに便利な、整理整頓がメインの多機能アドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">使用していないブーリアンオブジェクトの消去や、頂点を揃えるなど、ハードサーフェスモデリングで役立つ機能が多く含まれています。無料版も提供されています。</p>
+                            </div>
+                        </div>
+                    </div>
+                     <!-- Lazy Animation -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Lazy Animation</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">カスタムカーブパスに沿ったアニメーションを簡単に作成できるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">複数のオブジェクトに適用することも可能です。アニメーション作成のプロセスを簡素化します。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- カテゴリ: コンポジット -->
+            <section id="compositing">
+                <h2 class="flex items-center gap-x-3 text-2xl font-bold border-b-2 border-blue-500 pb-3 mb-8">
+                    <i class="fa-solid fa-film text-blue-500 w-8 text-center"></i>
+                    <span>コンポジット</span>
+                </h2>
+                <div class="space-y-4">
+                    <!-- Lazy Composer -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Lazy Composer</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">映画のようなエフェクトを手軽に追加できるコンポジット用アドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">アドオンのプロパティパネルからリアルタイムにエフェクトをカスタマイズすることができます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- カテゴリ: 生成系 -->
+            <section id="generative">
+                <h2 class="flex items-center gap-x-3 text-2xl font-bold border-b-2 border-blue-500 pb-3 mb-8">
+                    <i class="fa-solid fa-gears text-blue-500 w-8 text-center"></i>
+                    <span>生成系</span>
+                </h2>
+                <div class="space-y-4">
+                    <!-- A.N.T.Landscape -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">A.N.T.Landscape</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">様々な地形をワンクリックで生成できる標準搭載のアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">峡谷や川など、プリセットから様々な種類の地形を選ぶことができます。生成時に解像度や山の高さ、ノイズの大きさなどを細かく調整可能ですが、一度確定すると後からパラメータでの再調整はできません。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Dynamic Sky -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Dynamic Sky</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">ノードベースでリアルな空を生成する標準搭載のアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">HDRIとは異なり、生成後に空や雲の色、雲の量、太陽の強さなどをパラメータで自由に調整できるのが大きな利点です。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Archimesh -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Archimesh</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">壁、ドア、窓、家具などを簡単に作成し、建築の間取りを手軽に作れる標準搭載のアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">パラメータで壁の長さやドアの種類などを調整できます。オブジェクトによっては追加時にしか調整できないものもあるため注意が必要です。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Sapling Tree Gen -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Sapling Tree Gen</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">木を簡単に生成できる標準搭載のアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">プリセットから木の種類を選び、葉の数や大きさなどを調整できます。さらに、風で木や葉が揺れるアニメーションを自動で付けることも可能です。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- BlenderKit -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">BlenderKit</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">数万点に及ぶモデル、マテリアル、HDRIなどのアセットをBlender内で直接ダウンロードして使用できるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">全て商用利用可能です。アセットの半分以上が無料で利用でき、クオリティも非常に高いです。使いたいアセットをビューポートにドラッグ＆ドロップするだけで簡単にシーンに追加できます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- カテゴリ: シェーダー -->
+            <section id="shaders">
+                <h2 class="flex items-center gap-x-3 text-2xl font-bold border-b-2 border-blue-500 pb-3 mb-8">
+                    <i class="fa-solid fa-palette text-blue-500 w-8 text-center"></i>
+                    <span>シェーダー</span>
+                </h2>
+                <div class="space-y-4">
+                    <!-- Grungit -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Grungit</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">ワンクリックでオブジェクトに傷や汚れなどの劣化表現を追加できるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">もともと有料だったアドオンが無料化されたため、クオリティが高いのが特徴です。シェーダーノードを直接編集することで、傷の範囲や汚れの色など、さらに細かい調整も可能です。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- カテゴリ: カメラ -->
+            <section id="camera">
+                <h2 class="flex items-center gap-x-3 text-2xl font-bold border-b-2 border-blue-500 pb-3 mb-8">
+                    <i class="fa-solid fa-camera text-blue-500 w-8 text-center"></i>
+                    <span>カメラ</span>
+                </h2>
+                <div class="space-y-4">
+                    <!-- Camera Shakify -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Camera Shakify</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">ワンクリックでカメラにリアルな手ブレ表現を追加できるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">有名なBlenderアーティストであるIan Hubert氏が制作したアドオンです。手持ちカメラで歩いているような揺れや、走っているような強い揺れなど、9種類のプリセットから揺れ方を選ぶことができます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- カテゴリ: インターフェイス -->
+            <section id="interface">
+                <h2 class="flex items-center gap-x-3 text-2xl font-bold border-b-2 border-blue-500 pb-3 mb-8">
+                    <i class="fa-solid fa-sliders text-blue-500 w-8 text-center"></i>
+                    <span>インターフェイス</span>
+                </h2>
+                <div class="space-y-4">
+                     <!-- 3D Viewport Pie Menus -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">3D Viewport Pie Menus</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">視点切り替えやトランスフォームの適用などを、円形のパイメニューで素早く行えるようにする標準搭載のアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">慣れると操作速度が格段に上がります。例えば、Ctrl+Aで表示されるトランスフォーム適用メニューや、視点切り替えなどがパイメニュー化され、マウスを特定の方向に動かすだけで素早く操作を完了できます。</p>
+                            </div>
+                        </div>
+                    </div>
+                     <!-- Toggle Translation UI -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Toggle Translation UI</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">ワンクリックでUIの言語（日本語/英語）を切り替えられるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">海外のチュートリアルを見ながら作業する際など、UIの言語を頻繁に切り替えたい場合に非常に便利です。</p>
+                            </div>
+                        </div>
+                    </div>
+                     <!-- Simple Tabs -->
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                        <button class="accordion-toggle w-full p-4 text-left">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg text-black">Simple Tabs</h3>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </div>
+                            <p class="text-gray-600 mt-1 text-sm">サイドメニュー（Nキー）のタブを整理できるアドオンです。</p>
+                        </button>
+                        <div class="accordion-content px-4">
+                            <div class="border-t border-gray-200 pt-3 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-1">詳細：</h4>
+                                <p class="text-gray-600 text-sm">アドオンをたくさん導入するとサイドメニューのタブが増えて見づらくなりますが、このアドオンを使えば、タブの名前変更、結合、順番変更が可能になり、使いやすくカスタマイズできます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 参考ページ -->
+        <section id="references" class="mt-16">
+            <h2 class="flex items-center gap-x-3 text-2xl font-bold border-b-2 border-gray-400 pb-3 mb-8">
+                <i class="fa-solid fa-link text-gray-500 w-8 text-center"></i>
+                <span>参考ページ</span>
+            </h2>
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <ul class="space-y-4">
+                    <li>
+                        <a href="https://cgbox.jp/2023/05/01/blender-addon-sum/" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-300">
+                            【2025年9月更新】Blenderで使いたいアドオン大全集！
+                            <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.youtube.com/watch?v=7XHfH0JR5Ks" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-300">
+                            【全て無料】blenderを劇的に便利に！おすすめアドオン20選
+                            <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accordions = document.querySelectorAll('.accordion-toggle');
+
+            accordions.forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = button.nextElementSibling;
+                    const icon = button.querySelector('i');
+
+                    // アコーディオンを開閉
+                    content.classList.toggle('open');
+                    
+                    // アイコンを回転
+                    icon.classList.toggle('rotate-180');
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
+
+
