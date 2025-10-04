@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>順番にご案内しております</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        /* スピナーアニメーション */
+        .loader {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #4A5568; /* Updated color */
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 md:flex md:items-center md:justify-center md:min-h-screen">
+
+    <div id="main-container" class="w-full max-w-4xl lg:max-w-4xl mx-auto bg-white p-2 sm:p-2 md:m-1 lg:rounded-lg">
+        
+        <div class="mb-8 flex items-center space-x-4">
+            <!-- Generic Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#4A5568" viewBox="0 0 256 256"><path d="M208,80a12,12,0,0,1-12,12H60a12,12,0,0,1,0-24H196A12,12,0,0,1,208,80Zm-28,48H60a12,12,0,0,0,0,24H180a12,12,0,0,0,0-24Zm-64,48H60a12,12,0,0,0,0,24h56a12,12,0,0,0,0-24Z"></path></svg>
+            <h1 class="text-3xl font-bold text-gray-700">タイトル</h1>
+        </div>
+        
+        <div class="lg:flex lg:space-x-12 lg:items-start">
+            <!-- Left Column -->
+            <div class="lg:w-1/2">
+                <!-- メインテキスト -->
+                <div class="text-left text-gray-800">
+                    <h2 class="text-2xl font-bold mb-4">順番にご案内しております。</h2>
+                    <p class="text-sm leading-relaxed mb-4">
+                        現在サイトが大変混雑しております。
+                        <br>
+                        順番が来るまでお待ちいただくか、時間をおいて再度アクセスしてください。
+                    </p>
+                    <p class="text-sm leading-relaxed mb-4">
+                        お待ちいただく場合には、このページを閉じずお待ちください。
+                    </p>
+                    <p class="text-sm leading-relaxed mb-4">
+                        順次ページ上でご案内開始の画面が表示されます。
+                        <br>
+                        待ち時間はあくまで目安です。
+                    </p>
+                    <p class="text-sm leading-relaxed mb-6">
+                        混雑状況によっては表示の待ち時間が変わる可能性がありますので、ご了承ください。
+                    </p>
+                </div>
+                
+                <!-- 進行状況バー -->
+                <div class="bg-gray-200 rounded-lg p-1 mb-6">
+                    <div class="bg-green-600 rounded flex items-center p-1" style="width: 30%;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 256 256"><path d="M141.22,126.85a12,12,0,1,1-17.44,16.29l-16.7-17.9L87.5,150.39a12,12,0,1,1-18-15.78l24-27.43a12,12,0,0,1,17.43-.57Z M232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128M156,76a16,16,0,1,0-16,16A16,16,0,0,0,156,76"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="lg:w-1/2">
+                <!-- 待機情報ボックス -->
+                <div class="bg-gradient-to-b from-gray-700 to-gray-800 text-white rounded-lg p-6 text-center shadow-lg">
+                    <div class="mb-4">
+                        <p class="text-sm">ご自身の前に並んでいる人数</p>
+                        <p class="text-4xl font-bold tracking-wider" id="queue-count">33416</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-sm">サイトにアクセスできる推定時刻</p>
+                        <p class="text-3xl font-bold tracking-wider" id="eta-time">11:10 <span class="text-xl">JST</span></p>
+                    </div>
+                    <div>
+                        <p class="text-sm">待ち時間の目安</p>
+                        <p class="text-3xl font-bold tracking-wider"><span id="wait-time">47</span> 分</p>
+                    </div>
+                </div>
+                
+                <!-- フッター情報 -->
+                <div class="text-center text-gray-500 mt-6">
+                    <p class="text-xs" id="last-updated">ステータスの最終更新： 10:23:27 JST</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM要素の取得 ---
+        const queueCountEl = document.getElementById('queue-count');
+        const etaTimeEl = document.getElementById('eta-time');
+        const waitTimeEl = document.getElementById('wait-time');
+        const lastUpdatedEl = document.getElementById('last-updated');
+        const mainContainer = document.getElementById('main-container');
+
+        // --- 初期値と設定 ---
+        let peopleInQueue = 33416;
+        // 1秒あたりに処理される人数（この値を調整して待ち時間を変更）
+        const peopleProcessedPerSecond = Math.floor(Math.random() * 5) + 10; 
+
+        // --- 時刻フォーマット関数 ---
+        const formatTime = (date) => {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        };
+        const formatTimeWithSeconds = (date) => {
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${formatTime(date)}:${seconds}`;
+        };
+
+        // --- メインの更新関数 ---
+        function updateWaitingInfo() {
+            // 0未満にならないように制御
+            if (peopleInQueue > 0) {
+                 // 1秒ごとにランダムでキューが減少
+                peopleInQueue -= Math.floor(Math.random() * 10) + 5;
+                if (peopleInQueue < 0) peopleInQueue = 0;
+            }
+
+            // 待ち時間を計算
+            const waitingTimeInSeconds = peopleInQueue / peopleProcessedPerSecond;
+            const waitingTimeInMinutes = Math.ceil(waitingTimeInSeconds / 60);
+
+            // 推定時刻を計算
+            const now = new Date();
+            const etaDate = new Date(now.getTime() + waitingTimeInSeconds * 1000);
+
+            // 表示を更新
+            queueCountEl.textContent = peopleInQueue.toLocaleString();
+            etaTimeEl.innerHTML = `${formatTime(etaDate)} <span class="text-xl">JST</span>`;
+            waitTimeEl.textContent = waitingTimeInMinutes;
+            
+            // 待ち時間が0になったら案内ページへ
+            if (waitingTimeInMinutes <= 0) {
+                showReadyScreen();
+            }
+        }
+
+        // --- 最終更新時刻を更新する関数 ---
+        function updateLastUpdatedTime() {
+            const now = new Date();
+            lastUpdatedEl.textContent = `ステータスの最終更新： ${formatTimeWithSeconds(now)} JST`;
+        }
+        
+        // --- 案内準備完了画面を表示する関数 ---
+        function showReadyScreen() {
+            // インターバルを停止
+            clearInterval(mainInterval);
+            clearInterval(timeUpdateInterval);
+            
+            // 画面の内容を書き換え
+            mainContainer.innerHTML = `
+                <div class="text-center text-gray-800 flex flex-col justify-center items-center py-20 lg:py-32">
+                    <div class="loader mx-auto mb-6"></div>
+                    <h1 class="text-2xl font-bold mb-4">ご案内の準備ができました。</h1>
+                    <p class="text-sm leading-relaxed mb-4">
+                        サイトへ自動的に移動します。
+                        <br>
+                        しばらくお待ちください。
+                    </p>
+                </div>
+            `;
+            // 3秒後にリダイレクト（デモのためアラートを表示）
+            setTimeout(() => {
+                alert("サイトへ移動します。 (デモ)");
+                // window.location.href = "https://www.example.com/";
+            }, 3000);
+        }
+
+        // --- インターバル設定 ---
+        // 1秒ごとに待機情報を更新
+        const mainInterval = setInterval(updateWaitingInfo, 1000);
+        // 1秒ごとに最終更新時刻を更新
+        const timeUpdateInterval = setInterval(updateLastUpdatedTime, 1000);
+
+        // --- 初期表示の実行 ---
+        updateWaitingInfo();
+        updateLastUpdatedTime();
+
+    </script>
+
+</body>
+</html>
+
